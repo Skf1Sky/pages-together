@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Save, X, Plus, Info, FileText, ListOrdered, Download } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, Info, FileText, ListOrdered, Download, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 
@@ -40,6 +40,7 @@ function InputField({ label, placeholder, type = "text", value, onChange, classN
 
 function UploadSoftware() {
   const [versions, setVersions] = useState([{ v: "", d: "", s: "" }]);
+  const [iconUrl, setIconUrl] = useState("");
 
   const addVersion = () => setVersions([...versions, { v: "", d: "", s: "" }]);
   const removeVersion = (index: number) => setVersions(versions.filter((_, i) => i !== index));
@@ -68,9 +69,30 @@ function UploadSoftware() {
           {/* Basic Info */}
           <FormSection title="Thông tin cơ bản" icon={Info}>
             <InputField label="Tên phần mềm" placeholder="VD: Visual Studio Code" className="md:col-span-2" />
+            
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-muted-foreground ml-1">Icon phần mềm (URL)</label>
+              <div className="flex gap-3">
+                <div className="size-14 rounded-2xl bg-secondary/50 border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
+                  {iconUrl ? (
+                    <img src={iconUrl} alt="Icon preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="size-5 text-muted-foreground" />
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  value={iconUrl}
+                  onChange={(e) => setIconUrl(e.target.value)}
+                  className="w-full px-5 h-14 bg-secondary/50 rounded-2xl border border-transparent focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all font-medium"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục</label>
-              <select className="w-full px-5 h-12 bg-secondary/50 rounded-xl border border-transparent focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all font-bold appearance-none">
+              <select className="w-full px-5 h-14 bg-secondary/50 rounded-2xl border border-transparent focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all font-bold appearance-none">
                 <option>Xây Dựng</option>
                 <option>Đồ Hoạ</option>
                 <option>Văn Phòng</option>
