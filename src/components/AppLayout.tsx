@@ -1,84 +1,133 @@
 import { Link } from "@tanstack/react-router";
-import { LogIn, Heart, Github, Twitter, Mail } from "lucide-react";
+import { LogIn, Home, Package, LayoutGrid, Users, MessageSquare, Settings, Search, Bell } from "lucide-react";
 
-export function AppLayout({ children, activeTab }: { children: React.ReactNode; activeTab?: string }) {
-  const tabs = ["Trang chủ", "Danh mục", "Phần mềm", "Cộng đồng", "Quản trị"];
+export function AppLayout({ 
+  children, 
+  activeTab, 
+  rightPanel, 
+  sidebarItems,
+  showAdminLink = true,
+  isAdmin = false
+}: { 
+  children: React.ReactNode; 
+  activeTab?: string; 
+  rightPanel?: React.ReactNode;
+  sidebarItems?: { name: string; icon: any; path: string }[];
+  showAdminLink?: boolean;
+  isAdmin?: boolean;
+}) {
+  const defaultItems = [
+    { name: "Trang chủ", icon: Home, path: "/" },
+    { name: "Danh mục", icon: LayoutGrid, path: "/" },
+    { name: "Người dùng", icon: Users, path: "/" },
+  ];
+
+  const items = sidebarItems || defaultItems;
+
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-primary/20 selection:text-primary">
-      <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-50 glass border-b border-border/50">
-          <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 h-16 w-full">
-            <div className="flex items-center gap-10">
-              <Link to="/" className="flex items-center gap-2 group">
-                <div className="size-8 rounded-xl bg-gradient-to-br from-primary to-[oklch(0.55_0.22_270)] flex items-center justify-center text-primary-foreground font-bold shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">K</div>
-                <span className="font-bold text-xl tracking-tight">KT<span className="text-primary">NET</span></span>
-              </Link>
-              <nav className="hidden md:flex items-center gap-1 overflow-x-auto">
-                {[
-                  { name: "Trang chủ", path: "/" },
-                  { name: "Phần mềm", path: "/" },
-                ].map((t) => (
-                  <Link key={t.name} to={t.path} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeTab === t.name ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
-                    {t.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link to="/admin" className="flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-full hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all">
-                <LogIn className="size-4" />
-                Đăng nhập
-              </Link>
-            </div>
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+      <div className={`mx-auto max-w-[1920px] p-5 grid grid-cols-1 lg:grid-cols-[280px_1fr] ${rightPanel ? "xl:grid-cols-[280px_1fr_340px]" : ""} gap-5`}>
+        
+        {/* SIDEBAR */}
+        <aside className="hidden lg:flex flex-col justify-between h-[calc(100vh-40px)] sticky top-5 p-6 bg-gradient-to-b from-white/[0.03] to-white/[0.01] border border-border rounded-[24px]">
+          <div>
+            <Link to="/" className="flex items-center gap-3.5 mb-10 group">
+              <div className="relative size-[34px]">
+                <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 w-full bg-[#d4d4d8] rounded-full rotate-45 transition-transform group-hover:rotate-[225deg] duration-500" />
+                <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 w-full bg-primary rounded-full -rotate-45 transition-transform group-hover:-rotate-[135deg] duration-500" />
+              </div>
+              <h1 className="text-[28px] font-black tracking-tighter">
+                {isAdmin ? (
+                  <>X <span className="text-primary">Admin</span></>
+                ) : (
+                  <>X <span className="text-primary">Apps</span></>
+                )}
+              </h1>
+            </Link>
+
+            <nav className="flex flex-col gap-2.5">
+              {items.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path as any}
+                  className={`h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 transition-all border border-transparent ${
+                    activeTab === item.name
+                      ? "bg-primary/10 border-primary/25 text-white"
+                      : "text-muted-foreground hover:bg-white/[0.03] hover:border-border hover:text-white"
+                  }`}
+                >
+                  <item.icon className={`size-[18px] ${activeTab === item.name ? "text-primary" : ""}`} />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              ))}
+            </nav>
           </div>
-        </header>
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-border/50 bg-card/30 backdrop-blur-sm py-12">
-          <div className="max-w-7xl mx-auto px-6 lg:px-10">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-              <div className="col-span-1 md:col-span-1">
-                <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
-                  <span className="font-bold text-lg tracking-tight">KTNET</span>
-                </div>
-                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                  Nền tảng chia sẻ phần mềm an toàn, chất lượng hàng đầu Việt Nam. Tải xuống nhanh chóng, cập nhật liên tục.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-bold text-sm mb-4">Sản phẩm</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><button className="hover:text-primary transition">Phần mềm mới</button></li>
-                  <li><button className="hover:text-primary transition">Phần mềm hot</button></li>
-                  <li><button className="hover:text-primary transition">Bộ sưu tập</button></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-sm mb-4">Hỗ trợ</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><button className="hover:text-primary transition">Hướng dẫn sử dụng</button></li>
-                  <li><button className="hover:text-primary transition">Điều khoản dịch vụ</button></li>
-                  <li><button className="hover:text-primary transition">Chính sách bảo mật</button></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-sm mb-4">Kết nối</h4>
-                <div className="flex gap-4">
-                  <button className="size-9 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all"><Github className="size-4" /></button>
-                  <button className="size-9 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all"><Twitter className="size-4" /></button>
-                  <button className="size-9 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all"><Mail className="size-4" /></button>
-                </div>
-              </div>
+
+          {showAdminLink && (
+            <Link
+              to="/admin/login"
+              className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-white/[0.03] hover:border-border hover:text-white transition-all border border-transparent"
+            >
+              <Settings className="size-[18px]" />
+              <span className="font-medium">Quản trị</span>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              to="/"
+              className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-white/[0.03] hover:border-border hover:text-white transition-all border border-transparent"
+            >
+              <Home className="size-[18px]" />
+              <span className="font-medium">Về trang chủ</span>
+            </Link>
+          )}
+        </aside>
+
+        {/* MAIN */}
+        <main className="flex flex-col gap-5 min-w-0">
+          {/* Topbar */}
+          <header className="h-[74px] px-6 flex items-center justify-between bg-white/[0.02] border border-border rounded-[24px]">
+            <div className="relative flex-1 max-w-[640px] hidden md:block">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm phần mềm..."
+                className="w-full h-12 pl-12 pr-4 bg-[#111] border border-border rounded-[14px] focus:outline-none focus:border-primary/50 transition-colors"
+              />
             </div>
-            <div className="mt-12 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-xs text-muted-foreground">© 2024 KTNET. Tất cả quyền được bảo lưu.</p>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                Được làm với <Heart className="size-3 text-red-500 fill-red-500" /> tại Việt Nam
-              </div>
+
+            <div>
+              <button className="size-10 flex items-center justify-center rounded-xl bg-white/[0.03] border border-border text-muted-foreground hover:text-white transition-colors">
+                <Bell className="size-5" />
+              </button>
+              
+              {!isAdmin && activeTab !== "Trang chủ" && (
+                <div>
+                  <div className="text-right hidden sm:block">
+                    <div className="font-bold text-sm">Admin</div>
+                    <div className="text-muted-foreground text-[11px] uppercase tracking-wider font-medium">Quản trị viên</div>
+                  </div>
+                  <div className="size-[42px] rounded-full bg-[#1a1a1a] border border-border flex items-center justify-center overflow-hidden">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Avatar" />
+                  </div>
+                </div>
+              )}
             </div>
+          </header>
+
+          <div className="flex-1">
+            {children}
           </div>
-        </footer>
+        </main>
+
+        {/* RIGHT PANEL */}
+        {rightPanel && (
+          <aside>
+            {rightPanel}
+          </aside>
+        )}
       </div>
     </div>
   );
 }
+

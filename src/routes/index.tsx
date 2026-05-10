@@ -1,152 +1,190 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Star, RefreshCw, ArrowRight, Zap, Shield, MousePointer2 } from "lucide-react";
+import { Search, Zap, Shield, Laptop, LayoutGrid, Upload, User, Lock, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { softwares, categories } from "@/lib/software-data";
+import { softwares } from "@/lib/software-data";
 
 export const Route = createFileRoute("/")({
   component: Index,
-  head: () => ({ meta: [{ title: "KTNET — Tìm kiếm. Tải về. Chia sẻ." }, { name: "description", content: "Kho phần mềm an toàn cho Windows: trình duyệt, công cụ lập trình, ảo hóa và hơn thế nữa." }] }),
+  head: () => ({ 
+    meta: [
+      { title: "X Apps — Modern Software Hub" }, 
+      { name: "description", content: "High-performance software upload & download platform." }
+    ] 
+  }),
 });
 
 function Index() {
   const [active, setActive] = useState("Tất cả danh mục");
-  const list = active === "Tất cả danh mục" ? softwares : softwares.filter((s) => s.category === active);
 
-  return (
-    <AppLayout activeTab="Trang chủ">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-16 pb-20 lg:pt-24 lg:pb-32">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full -z-10 opacity-30">
-          <div className="absolute top-0 right-0 size-[500px] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-          <div className="absolute bottom-0 left-0 size-[500px] bg-blue-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
+  const rightPanel = (
+    <div className="flex flex-col gap-5">
+      {/* LOGIN CARD */}
+      <div className="bg-card border border-border rounded-[28px] p-7 flex flex-col gap-6">
+        <div>
+          <h3 className="text-[24px] font-extrabold tracking-tight mb-1">Chào mừng!</h3>
+          <p className="text-muted-foreground text-sm">Đăng nhập để quản lý phần mềm của bạn.</p>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8 animate-fade-in">
-            <Zap className="size-3" /> Nền tảng phần mềm thế hệ mới
-          </div>
-          <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] mb-8">
-            Tìm kiếm. Tải về. <br />
-            <span className="text-gradient">Trải nghiệm đỉnh cao.</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg text-muted-foreground mb-12 leading-relaxed">
-            Khám phá kho ứng dụng đồ sộ, được kiểm duyệt nghiêm ngặt. <br className="hidden md:block" />
-            An toàn tuyệt đối, tốc độ tối đa cho mọi nhu cầu của bạn.
-          </p>
 
-          <div className="max-w-3xl mx-auto relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-[oklch(0.55_0.22_270)] rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative flex items-center">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 size-6 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm phần mềm, công cụ và hơn thế nữa..."
-                className="w-full pl-16 pr-32 h-18 rounded-2xl border border-border/50 bg-card shadow-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary text-lg transition-all"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
-                Tìm ngay
-              </button>
+        <div className="space-y-4">
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <User className="size-[18px]" />
             </div>
+            <input
+              placeholder="Email hoặc Tên đăng nhập"
+              className="w-full h-[52px] pl-12 pr-4 bg-[#151515] border border-border rounded-[14px] focus:outline-none focus:border-primary/50 transition-colors"
+            />
           </div>
-          
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm">
-            <span className="text-muted-foreground font-medium">Xu hướng:</span>
-            {["Adobe 2024", "Office 365", "AutoCAD", "SketchUp", "Visual Studio"].map((t) => (
-              <button key={t} className="px-4 py-1.5 rounded-full bg-card border border-border hover:border-primary/50 hover:text-primary transition-all text-xs font-medium">
-                {t}
-              </button>
-            ))}
+
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <Lock className="size-[18px]" />
+            </div>
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              className="w-full h-[52px] pl-12 pr-4 bg-[#151515] border border-border rounded-[14px] focus:outline-none focus:border-primary/50 transition-colors"
+            />
           </div>
+        </div>
+
+        <button className="w-full h-[54px] rounded-[14px] bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+          Đăng nhập
+          <ChevronRight className="size-[18px]" />
+        </button>
+
+        <div className="text-center">
+          <span className="text-muted-foreground text-sm">Chưa có tài khoản? </span>
+          <button className="text-primary text-sm font-bold hover:underline">Đăng ký ngay</button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 pb-24">
-        {/* Category Filters */}
-        <div className="sticky top-20 z-40 py-4 glass rounded-2xl mb-12 flex flex-wrap gap-2 justify-center border border-border/50 shadow-premium">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setActive(c)}
-              className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${active === c ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105" : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground"}`}
+      {/* CALENDAR CARD */}
+      <div className="bg-card border border-border rounded-[28px] p-7 flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold">Lịch công việc</h3>
+          <div className="text-muted-foreground text-sm font-medium">Tháng 5, 2026</div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((day) => (
+            <div key={day} className="text-[11px] font-bold text-muted-foreground uppercase mb-2">
+              {day}
+            </div>
+          ))}
+          {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
+            <div
+              key={date}
+              className={`size-9 flex items-center justify-center rounded-xl text-sm transition-all cursor-pointer ${
+                date === 10
+                  ? "bg-primary text-white font-bold shadow-lg shadow-primary/20"
+                  : "hover:bg-white/[0.03] text-[#d4d4d8]"
+              }`}
             >
-              {c}
-            </button>
+              {date}
+            </div>
           ))}
         </div>
 
-        {/* Software Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {list.map((s) => (
-            <Link
-              key={s.id}
-              to="/software/$id"
-              params={{ id: s.id }}
-              className="group relative flex flex-col bg-card border border-border/50 rounded-[2rem] p-6 transition-all hover:border-primary/30 hover:shadow-hover hover:-translate-y-2 overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <ArrowRight className="size-4" />
-                </div>
-              </div>
-
-              <div className="flex justify-center mb-6">
-                <div
-                  className="size-20 rounded-[1.5rem] flex items-center justify-center text-3xl font-black text-white shadow-2xl group-hover:rotate-6 transition-transform"
-                  style={{ background: `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` }}
-                >
-                  {s.letter}
-                </div>
-              </div>
-
-              <div className="text-center">
-                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{s.name}</h3>
-                <p className="text-xs text-muted-foreground mt-2 font-medium bg-secondary/50 inline-block px-3 py-1 rounded-full">{s.version} · {s.size}</p>
-                
-                <div className="flex items-center justify-center gap-1.5 mt-4">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className={`size-3 ${i <= 4 ? "fill-orange-400 text-orange-400" : "text-muted"}`} />
-                    ))}
-                  </div>
-                  <span className="text-sm font-bold ml-1">{s.rating}</span>
-                  <span className="text-xs text-muted-foreground">({s.reviews})</span>
-                </div>
-
-                <div className="mt-6 flex items-center gap-2">
-                  <div className="h-10 flex-1 bg-primary text-primary-foreground font-bold text-sm rounded-xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
-                    Tải về ngay
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div className="pt-4 border-t border-border flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="size-2 rounded-full bg-primary" />
+            <div className="text-[13px] font-medium">Cập nhật hệ thống (14:00)</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="size-2 rounded-full bg-blue-500" />
+            <div className="text-[13px] font-medium text-muted-foreground">Kiểm tra bảo mật</div>
+          </div>
         </div>
+      </div>
+    </div>
+  );
 
-        {/* Load More Section */}
-        <div className="mt-16 text-center">
-          <button className="group px-8 py-4 rounded-2xl bg-card border border-border font-bold hover:border-primary transition-all inline-flex items-center gap-3">
-            <RefreshCw className="size-5 group-hover:rotate-180 transition-transform duration-700" />
-            Khám phá thêm ứng dụng
-          </button>
-        </div>
+  return (
+    <AppLayout activeTab="Trang chủ" rightPanel={rightPanel}>
+      <div className="flex flex-col gap-5">
+        
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-[30px] border border-primary/20 p-10 lg:p-16 bg-[#1A1A1A] bg-[radial-gradient(circle_at_top_right,rgba(197,164,126,0.15),transparent_40%)]">
+          <div className="absolute top-[-180px] right-[-180px] size-[500px] border border-primary/10 rounded-full" />
+          <div className="absolute top-[-120px] right-[-120px] size-[380px] border border-primary/10 rounded-full" />
+          
+          <div className="relative z-10">
+            <div className="inline-flex items-center h-[34px] px-4 rounded-full bg-accent/10 border border-accent/20 text-accent text-[13px] font-bold mb-6">
+              MODERN MINIMALIST
+            </div>
+            
+            <h2 className="text-[60px] lg:text-[82px] font-black leading-none tracking-tighter mb-5">
+              X <span className="text-primary">APPS</span>
+            </h2>
+            
+            <p className="text-muted-foreground text-lg max-w-[700px] leading-relaxed mb-10">
+              Hệ thống upload & download phần mềm với giao diện dark mode hiện đại,
+              tối ưu trải nghiệm người dùng và tốc độ tải.
+            </p>
+            
+            <div className="flex flex-wrap gap-3.5">
+              <button className="h-[54px] px-8 rounded-[16px] bg-primary text-white font-bold text-[15px] hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
+                Khám phá ngay
+              </button>
+              <button className="h-[54px] px-8 rounded-[16px] bg-[#191919] border border-border text-white font-bold text-[15px] hover:bg-white/[0.05] transition-all">
+                Tải phần mềm
+              </button>
+            </div>
+          </div>
+        </section>
 
-        {/* Trust Section */}
-        <div className="mt-32 grid md:grid-cols-3 gap-12 border-t border-border/50 pt-20">
+        {/* FEATURES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { icon: Shield, title: "An toàn tuyệt đối", desc: "Mọi tệp tin đều được quét virus bởi 50+ công cụ bảo mật hàng đầu thế giới." },
-            { icon: Zap, title: "Tải về siêu tốc", desc: "Hệ thống CDN toàn cầu giúp bạn tải phần mềm với tốc độ đường truyền tối đa." },
-            { icon: MousePointer2, title: "Cài đặt 1-Click", desc: "Hỗ trợ cài đặt tự động, không quảng cáo, không phần mềm rác đi kèm." },
-          ].map((f, i) => (
-            <div key={i} className="text-center">
-              <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mx-auto mb-6">
-                <f.icon className="size-7" />
+            { title: "Modern Design", icon: LayoutGrid, desc: "Giao diện tối giản, hiện đại và dễ sử dụng." },
+            { title: "Fast Download", icon: Zap, desc: "Hệ thống tối ưu tốc độ upload & download." },
+            { title: "Secure System", icon: Shield, desc: "Kiểm soát dữ liệu và upload an toàn." },
+            { title: "Developer Focus", icon: Laptop, desc: "Thiết kế dành cho cộng đồng developer." },
+          ].map((f) => (
+            <div key={f.title} className="bg-card border border-border rounded-[24px] p-6 group hover:border-primary/20 transition-colors">
+              <div className="size-[52px] rounded-[16px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <f.icon className="size-6" />
               </div>
-              <h4 className="font-bold text-xl mb-3">{f.title}</h4>
+              <h4 className="mt-4 mb-2 text-lg font-bold">{f.title}</h4>
               <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
+
+        {/* APPS SECTION */}
+        <section className="bg-card border border-border rounded-[28px] p-7">
+          <div className="flex items-center justify-between mb-7">
+            <h3 className="text-[28px] font-extrabold tracking-tight">Phần mềm nổi bật</h3>
+            <Link to="/" className="text-primary text-sm font-bold hover:underline">
+              Xem tất cả →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {softwares.slice(0, 4).map((s) => (
+              <div key={s.id} className="bg-[#141414] border border-[#222] rounded-[24px] p-5 transition-all hover:-translate-y-1 hover:border-primary/25 group">
+                <div 
+                  className="size-[72px] rounded-[20px] mb-4 flex items-center justify-center text-2xl font-black text-white"
+                  style={{ background: `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` }}
+                >
+                  {s.letter}
+                </div>
+                <div className="font-bold mb-1 truncate">{s.name}</div>
+                <div className="text-muted-foreground text-[13px] mb-4">{s.category}</div>
+                <Link
+                  to="/software/$id"
+                  params={{ id: s.id }}
+                  className="w-full h-11 rounded-[14px] bg-primary text-white font-bold flex items-center justify-center group-hover:bg-primary/90 transition-colors"
+                >
+                  Tải xuống
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+
       </div>
     </AppLayout>
   );
