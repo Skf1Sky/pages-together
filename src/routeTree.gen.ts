@@ -9,7 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as SoftwaresRouteImport } from './routes/softwares'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SoftwareIdRouteImport } from './routes/software.$id'
@@ -17,12 +21,34 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUploadRouteImport } from './routes/admin.upload'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminSoftwaresRouteImport } from './routes/admin.softwares'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminProfileRouteImport } from './routes/admin.profile'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoftwaresRoute = SoftwaresRouteImport.update({
+  id: '/softwares',
+  path: '/softwares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +85,18 @@ const AdminSoftwaresRoute = AdminSoftwaresRouteImport.update({
   id: '/softwares',
   path: '/softwares',
   getParentRoute: () => AdminRoute,
+} as any).lazy(() =>
+  import('./routes/admin.softwares.lazy').then((d) => d.Route),
+)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProfileRoute = AdminProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
@@ -73,8 +111,14 @@ const AdminEditIdRoute = AdminEditIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/softwares': typeof SoftwaresRoute
+  '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/profile': typeof AdminProfileRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/softwares': typeof AdminSoftwaresRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
@@ -85,7 +129,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/softwares': typeof SoftwaresRoute
+  '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/profile': typeof AdminProfileRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/softwares': typeof AdminSoftwaresRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
@@ -97,8 +147,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/softwares': typeof SoftwaresRoute
+  '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/profile': typeof AdminProfileRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/softwares': typeof AdminSoftwaresRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
@@ -111,8 +167,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
+    | '/contact'
+    | '/softwares'
+    | '/support'
     | '/admin/login'
+    | '/admin/profile'
+    | '/admin/settings'
     | '/admin/softwares'
     | '/admin/support'
     | '/admin/upload'
@@ -123,7 +185,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/contact'
+    | '/softwares'
+    | '/support'
     | '/admin/login'
+    | '/admin/profile'
+    | '/admin/settings'
     | '/admin/softwares'
     | '/admin/support'
     | '/admin/upload'
@@ -134,8 +202,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
+    | '/contact'
+    | '/softwares'
+    | '/support'
     | '/admin/login'
+    | '/admin/profile'
+    | '/admin/settings'
     | '/admin/softwares'
     | '/admin/support'
     | '/admin/upload'
@@ -147,17 +221,49 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ContactRoute: typeof ContactRoute
+  SoftwaresRoute: typeof SoftwaresRoute
+  SupportRoute: typeof SupportRoute
   SoftwareIdRoute: typeof SoftwareIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/softwares': {
+      id: '/softwares'
+      path: '/softwares'
+      fullPath: '/softwares'
+      preLoaderRoute: typeof SoftwaresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -209,6 +315,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSoftwaresRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/profile': {
+      id: '/admin/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AdminProfileRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -228,6 +348,8 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminProfileRoute: typeof AdminProfileRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSoftwaresRoute: typeof AdminSoftwaresRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUploadRoute: typeof AdminUploadRoute
@@ -238,6 +360,8 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
+  AdminProfileRoute: AdminProfileRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminSoftwaresRoute: AdminSoftwaresRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUploadRoute: AdminUploadRoute,
@@ -250,7 +374,11 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  ContactRoute: ContactRoute,
+  SoftwaresRoute: SoftwaresRoute,
+  SupportRoute: SupportRoute,
   SoftwareIdRoute: SoftwareIdRoute,
 }
 export const routeTree = rootRouteImport

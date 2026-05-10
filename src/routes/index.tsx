@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Zap, Shield, Laptop, LayoutGrid, User, Lock, ChevronRight, HardHat, Palette, Briefcase, LogOut, Settings, ExternalLink, Users, X, MessageSquare } from "lucide-react";
+import { Search, Zap, Shield, Laptop, LayoutGrid, User, Lock, LogIn, ChevronRight, HardHat, Palette, Briefcase, LogOut, Settings, ExternalLink, Users, X, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { softwares } from "@/lib/software-data";
@@ -23,10 +23,13 @@ export const Route = createFileRoute("/")({
   }),
 });
 
+import { useAuthStore } from "@/lib/auth-store";
+import { toast } from "sonner";
+
 function Index() {
   const { category } = Route.useSearch();
   const [searchQuery, setSearchQuery] = useState("");
-  const [user, setUser] = useState<{ name: string; role: 'admin' | 'user' } | null>(null);
+  const { user, login, logout } = useAuthStore();
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const filteredSoftwares = softwares.filter((s) => {
@@ -37,39 +40,30 @@ function Index() {
 
   const isHomePage = !category;
 
-  const handleDownload = (e: React.MouseEvent) => {
-    if (!user) {
-      e.preventDefault();
-      alert("Vui lòng đăng nhập để thực hiện hành động này!");
-      document.getElementById("login-card")?.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handleDownload = () => {
+    toast.success("Đang khởi tạo liên kết tải xuống an toàn...");
   };
 
   useEffect(() => {
     (window as any).onSupportClick = () => {
-      if (!user) {
-        alert("Vui lòng đăng nhập để gửi yêu cầu hỗ trợ!");
-        document.getElementById("login-card")?.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        setIsSupportModalOpen(true);
-      }
+      setIsSupportModalOpen(true);
     };
     return () => { delete (window as any).onSupportClick; };
-  }, [user]);
+  }, []);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const handleLogin = () => {
-    if (username === "admin" && password === "admin") {
-      setUser({ name: "Admin", role: "admin" });
+  const handleLogin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if ((username === "admin" && password === "admin") || (username === "xhome" && password === "xhome")) {
+      login({ username });
       setLoginError(null);
-    } else if (username === "xhome" && password === "xhome") {
-      setUser({ name: "xhome", role: "user" });
-      setLoginError(null);
+      toast.success("Đăng nhập thành công!");
     } else {
       setLoginError("Sai thông tin đăng nhập!");
+      toast.error("Đăng nhập thất bại");
     }
   };
 
@@ -132,9 +126,10 @@ function Index() {
 
               <button 
                 onClick={() => {
-                  setUser(null);
+                  logout();
                   setUsername("");
                   setPassword("");
+                  toast.info("Đã đăng xuất");
                 }}
                 className="h-[52px] px-5 rounded-[14px] bg-red-500/10 border border-red-500/20 text-red-500 font-bold flex items-center gap-3 hover:bg-red-500 hover:text-white transition-all mt-2"
               >
@@ -144,53 +139,23 @@ function Index() {
             </div>
           </div>
         ) : (
-          /* LOGIN FORM */
-          <>
+          /* CLICKABLE LOGIN CARD */
+          <Link 
+            to="/admin/login"
+            className="flex flex-col gap-6 group cursor-pointer"
+          >
             <div>
-              <h3 className="text-[24px] font-extrabold tracking-tight mb-1">Chào mừng!</h3>
-              <p className="text-muted-foreground text-sm">Đăng nhập để quản lý phần mềm của bạn.</p>
+              <h3 className="text-[24px] font-extrabold tracking-tight mb-1 group-hover:text-primary transition-colors">Chào mừng!</h3>
+              <p className="text-muted-foreground text-sm">Đăng nhập để quản lý phần mềm và tài khoản của bạn.</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <User className="size-[18px]" />
-                </div>
-                <input
-                  placeholder="Email hoặc Tên đăng nhập"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full h-[52px] pl-12 pr-4 bg-[#151515] border border-border rounded-[14px] focus:outline-none focus:border-primary/50 transition-colors"
-                />
+            <div className="h-[140px] rounded-[24px] bg-white/[0.02] border border-border flex flex-col items-center justify-center gap-4 group-hover:bg-primary/[0.04] group-hover:border-primary/30 transition-all">
+              <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <LogIn className="size-7" />
               </div>
-
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <Lock className="size-[18px]" />
-                </div>
-                <input
-                  type="password"
-                  placeholder="Mật khẩu"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-[52px] pl-12 pr-4 bg-[#151515] border border-border rounded-[14px] focus:outline-none focus:border-primary/50 transition-colors"
-                />
-              </div>
+              <span className="font-bold text-sm">Nhấn để đăng nhập hệ thống</span>
             </div>
-
-            <button 
-              onClick={handleLogin}
-              className="w-full h-[54px] rounded-[14px] bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-            >
-              Đăng nhập
-              <ChevronRight className="size-[18px]" />
-            </button>
-
-            <div className="text-center">
-              <span className="text-muted-foreground text-sm">Chưa có tài khoản? </span>
-              <button className="text-primary text-sm font-bold hover:underline">Đăng ký ngay</button>
-            </div>
-          </>
+          </Link>
         )}
       </div>
 
@@ -256,7 +221,7 @@ function Index() {
               </div>
               
               <h2 className="text-[60px] lg:text-[82px] font-black leading-none tracking-tighter mb-5">
-                X <span className="text-brand-red">APPS</span>
+                X <span className="text-brand-primary">APPS</span>
               </h2>
               
               <p className="text-muted-foreground text-lg max-w-[700px] leading-relaxed mb-10">
@@ -309,7 +274,7 @@ function Index() {
               {category ? `${category}` : "Phần mềm nổi bật"}
             </h3>
             {!category && (
-              <Link to="/" className="text-primary text-sm font-bold hover:underline">
+              <Link to="/softwares" className="text-primary text-sm font-bold hover:underline">
                 Xem tất cả →
               </Link>
             )}
@@ -328,8 +293,8 @@ function Index() {
                   <div className="font-bold mb-1 truncate">{s.name}</div>
                   <div className="text-muted-foreground text-[13px] mb-4">{s.category}</div>
                   <Link
-                    to={user ? "/software/$id" : "/"}
-                    params={user ? { id: s.id } : undefined}
+                    to="/software/$id"
+                    params={{ id: s.id }}
                     onClick={handleDownload}
                     className="w-full h-11 rounded-[14px] bg-primary text-white font-bold flex items-center justify-center group-hover:bg-primary/90 transition-colors"
                   >

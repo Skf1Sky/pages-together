@@ -10,20 +10,48 @@ import {
   ArrowUpRight,
   MessageSquare,
   Activity,
-  HardDrive
+  HardDrive,
+  Calendar,
+  CheckCircle2,
+  AlertTriangle
 } from "lucide-react";
 import { softwares } from "@/lib/software-data";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
+const chartData = [
+  { name: 'Mon', downloads: 2400, views: 4000 },
+  { name: 'Tue', downloads: 1398, views: 3000 },
+  { name: 'Wed', downloads: 9800, views: 2000 },
+  { name: 'Thu', downloads: 3908, views: 2780 },
+  { name: 'Fri', downloads: 4800, views: 1890 },
+  { name: 'Sat', downloads: 3800, views: 2390 },
+  { name: 'Sun', downloads: 4300, views: 3490 },
+];
+
+const topAppsData = softwares
+  .map(s => ({ name: s.name, value: parseInt(s.downloads?.replace(/[^0-9]/g, '') || "0") }))
+  .sort((a, b) => b.value - a.value)
+  .slice(0, 5);
+
 function AdminDashboard() {
+  const totalDownloads = softwares.reduce((acc, curr) => acc + parseInt(curr.downloads?.replace(/[^0-9]/g, '') || "0"), 0);
+
   const stats = [
     { label: "Tổng người dùng", value: "1,284", icon: Users, change: "+12%", color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Số lượng Apps", value: softwares.length.toString(), icon: Package, change: "+3", color: "text-primary", bg: "bg-primary/10" },
-    { label: "Lượt tải về", value: "45.2K", icon: Download, change: "+18%", color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "Dung lượng hệ thống", value: "128 GB", icon: HardDrive, change: "85%", color: "text-orange-500", bg: "bg-orange-500/10" },
+    { label: "Lượt tải về", value: `${(totalDownloads / 1000).toFixed(1)}K`, icon: Download, change: "+18%", color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Lượt tải hôm nay", value: "842", icon: Activity, change: "+5.4%", color: "text-orange-500", bg: "bg-orange-500/10" },
+  ];
+
+  const activityLog = [
+    { type: 'upload', user: 'Admin', target: 'AutoCAD 2024', time: '10 phút trước', icon: Package, color: 'text-blue-500' },
+    { type: 'delete', user: 'Admin', target: 'Old Version 1.2', time: '1 giờ trước', icon: AlertTriangle, color: 'text-red-500' },
+    { type: 'update', user: 'Admin', target: 'System Settings', time: '3 giờ trước', icon: CheckCircle2, color: 'text-green-500' },
+    { type: 'login', user: 'Admin', target: 'New Session', time: '5 giờ trước', icon: Users, color: 'text-primary' },
   ];
 
   return (
@@ -32,7 +60,7 @@ function AdminDashboard() {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-[32px] font-black tracking-tight">Dashboard Overview</h1>
-          <p className="text-muted-foreground">Chào mừng quay trở lại! Đây là tóm tắt hoạt động của hệ thống.</p>
+          <p className="text-muted-foreground font-medium">Hệ thống đang hoạt động ổn định. <span className="text-green-500">99.9% Uptime.</span></p>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/admin/softwares" className="h-11 px-5 rounded-xl border border-border bg-white/[0.02] flex items-center gap-2 font-bold hover:bg-white/[0.05] transition-all">
@@ -64,93 +92,159 @@ function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
-        {/* Main Chart/Table Area */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-6 min-h-[400px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Chart Area */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-8 min-h-[450px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <Activity className="size-5" />
+                  <TrendingUp className="size-5" />
                 </div>
-                <h3 className="text-xl font-bold">Biểu đồ lượt tải</h3>
+                <div>
+                  <h3 className="text-xl font-bold">Thống kê truy cập & Tải về</h3>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">Dữ liệu được cập nhật theo thời gian thực</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold">7 Ngày qua</button>
-                <button className="px-3 py-1 rounded-lg bg-white/[0.03] text-muted-foreground text-xs font-bold hover:text-white">30 Ngày</button>
+              <div className="flex items-center gap-2 p-1 bg-white/[0.03] border border-border rounded-xl">
+                <button className="px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-bold shadow-lg">7 Ngày</button>
+                <button className="px-4 py-1.5 rounded-lg text-muted-foreground text-xs font-bold hover:text-white transition-colors">30 Ngày</button>
               </div>
             </div>
             
-            {/* Mock Chart Area */}
-            <div className="flex-1 flex items-end gap-2 pt-10">
-              {[45, 78, 56, 92, 43, 67, 85, 45, 78, 56, 92, 43].map((h, i) => (
-                <div key={i} className="flex-1 bg-white/[0.03] rounded-t-lg relative group transition-all hover:bg-primary/20">
-                  <div 
-                    className="absolute bottom-0 w-full bg-primary/40 rounded-t-lg transition-all group-hover:bg-primary" 
-                    style={{ height: `${h}%` }}
+            <div className="flex-1 h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#c5a47e" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#c5a47e" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#555" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    dy={10}
                   />
-                </div>
-              ))}
+                  <YAxis 
+                    stroke="#555" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tickFormatter={(value) => `${value}`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '12px' }}
+                    itemStyle={{ color: '#c5a47e' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="downloads" 
+                    stroke="#c5a47e" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorDownloads)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-6">
-            <h3 className="text-xl font-bold flex items-center gap-3">
-              <Clock className="size-5 text-primary" />
-              Cập nhật gần đây
-            </h3>
-            <div className="flex flex-col divide-y divide-border/50">
-              {softwares.slice(0, 3).map((s) => (
-                <div key={s.id} className="py-5 flex items-center justify-between group">
+          {/* Activity Log */}
+          <div className="bg-card border border-border rounded-[32px] p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-bold flex items-center gap-3">
+                <Activity className="size-5 text-primary" />
+                Hoạt động gần đây
+              </h3>
+              <Link to="/admin" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors">Xem tất cả</Link>
+            </div>
+            <div className="space-y-6">
+              {activityLog.map((log, i) => (
+                <div key={i} className="flex items-center justify-between group">
                   <div className="flex items-center gap-4">
-                    <div className="size-12 rounded-2xl flex items-center justify-center text-white font-black" style={{ background: s.color }}>
-                      {s.letter}
+                    <div className={`size-10 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center ${log.color}`}>
+                      <log.icon className="size-5" />
                     </div>
                     <div>
-                      <div className="font-bold">{s.name}</div>
-                      <div className="text-sm text-muted-foreground font-medium">Phiên bản {s.version} • {s.size}</div>
+                      <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                        {log.user} <span className="text-muted-foreground font-medium">đã {log.type === 'upload' ? 'đăng' : log.type === 'delete' ? 'xóa' : log.type === 'update' ? 'cập nhật' : 'đăng nhập'}</span> {log.target}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">{log.time}</div>
                     </div>
                   </div>
-                  <Link to="/admin/softwares" className="size-10 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                    <ChevronRight className="size-5" />
-                  </Link>
+                  <ChevronRight className="size-4 text-muted-foreground group-hover:text-white transition-colors" />
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Sidebar Activity */}
-        <div className="flex flex-col gap-8">
+        {/* Sidebar Stats Area */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          
+          {/* Top Softwares Bar Chart */}
+          <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-6">
+            <h3 className="text-xl font-bold">Top phần mềm tải nhiều</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topAppsData} layout="vertical">
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={80} 
+                    fontSize={10} 
+                    stroke="#888" 
+                    axisLine={false} 
+                    tickLine={false} 
+                  />
+                  <Tooltip 
+                    cursor={{fill: 'transparent'}}
+                    contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="value" fill="#c5a47e" radius={[0, 4, 4, 0]} barSize={12} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Quick Support Badge */}
           <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-[32px] p-8 flex flex-col gap-6">
-            <h3 className="text-xl font-bold">Hỗ trợ mới</h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">Bạn có 3 yêu cầu hỗ trợ mới cần được xử lý ngay.</p>
-            <Link to="/admin/support" className="h-[52px] rounded-2xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all">
-              Xem yêu cầu
-              <TrendingUp className="size-[18px]" />
+            <div className="flex justify-between items-start">
+              <h3 className="text-xl font-bold">Hỗ trợ mới</h3>
+              <div className="px-2 py-1 bg-primary text-white text-[10px] font-black rounded-lg animate-pulse">3 MỚI</div>
+            </div>
+            <p className="text-muted-foreground text-sm leading-relaxed font-medium">Hệ thống nhận được 3 yêu cầu hỗ trợ mới chưa được phản hồi.</p>
+            <Link to="/admin/support" className="h-[52px] rounded-2xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+              Phản hồi ngay
+              <MessageSquare className="size-[18px]" />
             </Link>
           </div>
 
           <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-6">
-            <h3 className="text-xl font-bold">Tin nhắn hệ thống</h3>
+            <h3 className="text-xl font-bold">Thông báo hệ thống</h3>
             <div className="flex flex-col gap-5">
               {[
-                { user: "xhome", msg: "Lỗi link tải AutoCAD 2024", time: "5 phút trước" },
-                { user: "nva", msg: "Cần hỗ trợ cài Photoshop", time: "1 giờ trước" },
-                { user: "admin", msg: "Đã cập nhật server", time: "2 giờ trước" },
+                { user: "System", msg: "Sao lưu định kỳ hoàn tất", icon: CheckCircle2, color: 'text-green-500' },
+                { user: "Security", msg: "Phát hiện đăng nhập lạ", icon: AlertTriangle, color: 'text-red-500' },
+                { user: "Update", msg: "Phiên bản v2.4 đã sẵn sàng", icon: Activity, color: 'text-blue-500' },
               ].map((m, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-primary">{m.user}</span>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase">{m.time}</span>
+                <div key={i} className="flex gap-4">
+                  <div className={`size-10 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center shrink-0 ${m.color}`}>
+                    <m.icon className="size-5" />
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-1">{m.msg}</p>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-white">{m.msg}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase">{m.user}</span>
+                  </div>
                 </div>
               ))}
             </div>
-            <Link to="/admin/support" className="text-center text-xs font-bold text-primary hover:underline">
-              Xem tất cả tin nhắn
-            </Link>
           </div>
         </div>
       </div>

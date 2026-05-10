@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock, User, ShieldCheck, ArrowRight, Github } from "lucide-react";
 import { useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/login")({
   component: AdminLogin,
@@ -8,10 +10,12 @@ export const Route = createFileRoute("/admin/login")({
 
 function AdminLogin() {
   const navigate = useNavigate();
+  const login = useAuthStore(state => state.login);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,10 +26,13 @@ function AdminLogin() {
     setTimeout(() => {
       if (username === "admin" && password === "Thienvip1") {
         setLoading(false);
+        login({ username, rememberMe });
+        toast.success(`Chào mừng trở lại, ${username}!`);
         navigate({ to: "/admin" });
       } else {
         setLoading(false);
         setError("Tên đăng nhập hoặc mật khẩu không chính xác.");
+        toast.error("Đăng nhập thất bại");
       }
     }, 1200);
   };
@@ -60,7 +67,6 @@ function AdminLogin() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
                   className="w-full h-[54px] pl-12 pr-4 bg-secondary/30 border border-border/50 rounded-2xl focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all font-medium"
                 />
               </div>
@@ -80,10 +86,20 @@ function AdminLogin() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Thienvip1"
                   className="w-full h-[54px] pl-12 pr-4 bg-secondary/30 border border-border/50 rounded-2xl focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all font-medium"
                 />
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 px-1">
+              <input 
+                type="checkbox" 
+                id="remember" 
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="size-4 accent-primary rounded-lg"
+              />
+              <label htmlFor="remember" className="text-sm font-bold text-muted-foreground cursor-pointer">Duy trì đăng nhập</label>
             </div>
 
             <button

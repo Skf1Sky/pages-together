@@ -4,20 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -45,95 +31,93 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-brand-red: var(--brand-red);
+  --color-brand-primary: var(--brand-primary);
 }
+
 :root {
   --radius: 1rem;
-  --background: #2D2D2D;
-  --foreground: #E2E2E2;
-  --card: #1A1A1A;
-  --card-foreground: #E2E2E2;
-  --popover: #1A1A1A;
-  --popover-foreground: #E2E2E2;
-  --primary: #C5A47E;
-  --primary-foreground: #1A1A1A;
-  --secondary: #4A6741;
-  --secondary-foreground: #E2E2E2;
-  --muted: #6B9CAD;
-  --muted-foreground: #E2E2E2;
-  --accent: #C5A47E;
-  --accent-foreground: #1A1A1A;
-  --destructive: #C5A47E;
-  --destructive-foreground: #1A1A1A;
-  --border: #3D3D3D;
-  --input: #252525;
-  --ring: #C5A47E;
-  --success: #4A6741;
-  
-  --brand-red: #E52B50;
-  
-  --shadow-premium: 0 10px 30px -5px rgba(0,0,0,0.5);
-  --shadow-hover: 0 20px 40px -10px rgba(197, 164, 126, 0.15);
-  
-  --sidebar-bg: #1A1A1A;
-  --sidebar-border: #3D3D3D;
+  /* Light Mode Values */
+  --background: #F8F9FA;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --primary: #c5a47e;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F3F5;
+  --secondary-foreground: #1A1A1A;
+  --muted: #E9ECEF;
+  --muted-foreground: #6C757D;
+  --border: #DEE2E6;
+  --input: #FFFFFF;
+  --ring: #c5a47e;
+  --brand-primary: #c5a47e;
 }
 
 .dark {
-  --background: #2D2D2D;
+  /* Dark Mode Values */
+  --background: #0A0A0A;
   --foreground: #E2E2E2;
-  --card: #1A1A1A;
+  --card: #151515;
   --card-foreground: #E2E2E2;
-  --primary: #C5A47E;
-  --primary-foreground: #1A1A1A;
-  --border: #3D3D3D;
+  --primary: #c5a47e;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1A1A1A;
+  --secondary-foreground: #E2E2E2;
+  --muted: #1A1A1A;
+  --muted-foreground: #888888;
+  --border: #252525;
+  --input: #111111;
+  --ring: #c5a47e;
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--border);
   }
 
   body {
-    background-color: var(--color-background);
-    background-image: var(--gradient-mesh);
-    color: var(--color-foreground);
+    background-color: var(--background);
+    color: var(--foreground);
     min-height: 100vh;
+    @apply transition-colors duration-300;
   }
 }
 
-.glass {
-  background: oklch(1 0 0 / 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid oklch(1 0 0 / 0.1);
+/* SKELETON ANIMATION */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, oklch(0.6 0.22 260), oklch(0.55 0.22 270));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--muted) 25%, 
+    var(--border) 50%, 
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+.shadow-premium {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.dark .shadow-premium {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
 }
