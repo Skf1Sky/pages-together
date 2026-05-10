@@ -13,8 +13,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SoftwareIdRouteImport } from './routes/software.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUploadRouteImport } from './routes/admin.upload'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AdminSoftwaresRouteImport } from './routes/admin.softwares'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminEditIdRouteImport } from './routes/admin.edit.$id'
 
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
@@ -36,9 +40,24 @@ const SoftwareIdRoute = SoftwareIdRouteImport.update({
   path: '/software/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUploadRoute = AdminUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSoftwaresRoute = AdminSoftwaresRouteImport.update({
+  id: '/softwares',
+  path: '/softwares',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -46,30 +65,47 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEditIdRoute = AdminEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/softwares': typeof AdminSoftwaresRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
+  '/admin/users': typeof AdminUsersRoute
   '/software/$id': typeof SoftwareIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/softwares': typeof AdminSoftwaresRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
+  '/admin/users': typeof AdminUsersRoute
   '/software/$id': typeof SoftwareIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/softwares': typeof AdminSoftwaresRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/upload': typeof AdminUploadRoute
+  '/admin/users': typeof AdminUsersRoute
   '/software/$id': typeof SoftwareIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/edit/$id': typeof AdminEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -77,19 +113,36 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/login'
+    | '/admin/softwares'
+    | '/admin/support'
     | '/admin/upload'
+    | '/admin/users'
     | '/software/$id'
     | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/login' | '/admin/upload' | '/software/$id' | '/admin'
+  to:
+    | '/'
+    | '/admin/login'
+    | '/admin/softwares'
+    | '/admin/support'
+    | '/admin/upload'
+    | '/admin/users'
+    | '/software/$id'
+    | '/admin'
+    | '/admin/edit/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/admin/login'
+    | '/admin/softwares'
+    | '/admin/support'
     | '/admin/upload'
+    | '/admin/users'
     | '/software/$id'
     | '/admin/'
+    | '/admin/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,11 +181,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SoftwareIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/upload': {
       id: '/admin/upload'
       path: '/upload'
       fullPath: '/admin/upload'
       preLoaderRoute: typeof AdminUploadRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/softwares': {
+      id: '/admin/softwares'
+      path: '/softwares'
+      fullPath: '/admin/softwares'
+      preLoaderRoute: typeof AdminSoftwaresRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/login': {
@@ -142,19 +216,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/edit/$id': {
+      id: '/admin/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/admin/edit/$id'
+      preLoaderRoute: typeof AdminEditIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminSoftwaresRoute: typeof AdminSoftwaresRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminUploadRoute: typeof AdminUploadRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminEditIdRoute: typeof AdminEditIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
+  AdminSoftwaresRoute: AdminSoftwaresRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminUploadRoute: AdminUploadRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminEditIdRoute: AdminEditIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

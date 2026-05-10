@@ -107,16 +107,12 @@ function SoftwareDetail() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
-                {[
-                  { v: s.version, d: "05/05/2024", s: s.size, latest: true },
-                  { v: "1.88.0", d: "12/04/2024", s: "86.2 MB", latest: false },
-                  { v: "1.87.2", d: "28/03/2024", s: "85.9 MB", latest: false },
-                ].map((ver, i) => (
+                {s.versions.map((ver, i) => (
                   <tr key={i} className="hover:bg-primary/5 transition-colors group">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-lg">{ver.v}</span>
-                        {ver.latest && (
+                        {i === 0 && (
                           <span className="px-2 py-0.5 rounded-md bg-primary text-[10px] font-black uppercase tracking-widest text-primary-foreground">Mới nhất</span>
                         )}
                       </div>

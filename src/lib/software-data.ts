@@ -1,3 +1,9 @@
+export type SoftwareVersion = {
+  v: string; // version string
+  s: string; // size string
+  d: string; // date string
+};
+
 export type Software = {
   id: string;
   name: string;
@@ -11,6 +17,7 @@ export type Software = {
   publisher?: string;
   downloads?: string;
   description?: string;
+  versions: SoftwareVersion[];
   features?: string[];
   requirements?: {
     cpu: string;
@@ -32,7 +39,12 @@ export const softwares: Software[] = [
     reviews: "12K",
     category: "Xây Dựng",
     color: "#E52B50",
-    letter: "AC"
+    letter: "AC",
+    versions: [
+      { v: "2024.1", s: "3.2 GB", d: "05/05/2024" },
+      { v: "2023.0", s: "3.0 GB", d: "10/04/2023" },
+      { v: "2022.1", s: "2.8 GB", d: "15/03/2022" }
+    ]
   },
   {
     id: "3dsmax",
@@ -43,7 +55,11 @@ export const softwares: Software[] = [
     reviews: "8.5K",
     category: "Xây Dựng",
     color: "#0076B6",
-    letter: "3M"
+    letter: "3M",
+    versions: [
+      { v: "2024", s: "4.5 GB", d: "20/04/2024" },
+      { v: "2023", s: "4.2 GB", d: "12/04/2023" }
+    ]
   },
   {
     id: "corona",
@@ -54,7 +70,8 @@ export const softwares: Software[] = [
     reviews: "4.2K",
     category: "Xây Dựng",
     color: "#F05A28",
-    letter: "CR"
+    letter: "CR",
+    versions: [{ v: "11", s: "800 MB", d: "01/02/2024" }]
   },
   {
     id: "vray",
@@ -65,7 +82,8 @@ export const softwares: Software[] = [
     reviews: "6.7K",
     category: "Xây Dựng",
     color: "#0099D8",
-    letter: "VR"
+    letter: "VR",
+    versions: [{ v: "6.2", s: "1.1 GB", d: "15/01/2024" }]
   },
   {
     id: "sketchup",
@@ -76,7 +94,8 @@ export const softwares: Software[] = [
     reviews: "15K",
     category: "Xây Dựng",
     color: "#005F9E",
-    letter: "SK"
+    letter: "SK",
+    versions: [{ v: "2024", s: "950 MB", d: "10/03/2024" }]
   },
   {
     id: "enscape",
@@ -87,7 +106,8 @@ export const softwares: Software[] = [
     reviews: "3.1K",
     category: "Xây Dựng",
     color: "#0B2B36",
-    letter: "ES"
+    letter: "ES",
+    versions: [{ v: "3.5", s: "1.2 GB", d: "05/02/2024" }]
   },
   {
     id: "photoshop",
@@ -98,7 +118,11 @@ export const softwares: Software[] = [
     reviews: "45K",
     category: "Đồ Hoạ",
     color: "#31A8FF",
-    letter: "PS"
+    letter: "PS",
+    versions: [
+      { v: "2024 25.0", s: "2.8 GB", d: "10/10/2023" },
+      { v: "2023 24.0", s: "2.5 GB", d: "15/10/2022" }
+    ]
   },
   {
     id: "indesign",
@@ -109,7 +133,8 @@ export const softwares: Software[] = [
     reviews: "18K",
     category: "Đồ Hoạ",
     color: "#FF3366",
-    letter: "ID"
+    letter: "ID",
+    versions: [{ v: "2024 19.0", s: "1.5 GB", d: "12/10/2023" }]
   },
   {
     id: "foxit-editor",
@@ -120,7 +145,8 @@ export const softwares: Software[] = [
     reviews: "9.2K",
     category: "Văn Phòng",
     color: "#F26122",
-    letter: "FE"
+    letter: "FE",
+    versions: [{ v: "13.0", s: "850 MB", d: "01/03/2024" }]
   }
 ];
 

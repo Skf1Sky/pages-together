@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Package, Users, Settings } from "lucide-react";
+import { LayoutDashboard, Package, Users, MessageSquare } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 export const Route = createFileRoute("/admin")({
@@ -16,9 +16,9 @@ function AdminLayout() {
 
   const adminSidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/admin" },
-    { name: "Phần mềm", icon: Package, path: "/admin" },
-    { name: "Người dùng", icon: Users, path: "/admin" },
-    { name: "Cấu hình", icon: Settings, path: "/admin" },
+    { name: "Phần mềm", icon: Package, path: "/admin/softwares" },
+    { name: "Người dùng", icon: Users, path: "/admin/users" },
+    { name: "Yêu cầu hỗ trợ", icon: MessageSquare, path: "/admin/support" },
   ];
 
   return (
