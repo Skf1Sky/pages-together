@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import React from "react";
 import { 
   Users, 
   Package, 
@@ -15,10 +16,11 @@ import {
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
-import { softwares } from "@/lib/software-data";
+import { getSoftwares } from "@/lib/api/softwares";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export const Route = createFileRoute("/admin/")({
+  loader: () => getSoftwares(),
   component: AdminDashboard,
 });
 
@@ -32,17 +34,23 @@ const chartData = [
   { name: 'Sun', downloads: 4300, views: 3490 },
 ];
 
-const topAppsData = softwares
-  .map(s => ({ name: s.name, value: parseInt(s.downloads?.replace(/[^0-9]/g, '') || "0") }))
-  .sort((a, b) => b.value - a.value)
-  .slice(0, 5);
-
 function AdminDashboard() {
-  const totalDownloads = softwares.reduce((acc, curr) => acc + parseInt(curr.downloads?.replace(/[^0-9]/g, '') || "0"), 0);
+  const softwares = Route.useLoaderData() || [];
+  
+  const topAppsData = React.useMemo(() => (
+    Array.isArray(softwares) ? softwares
+      .map((s: any) => ({ name: s.name, value: parseInt(s.downloads?.replace(/[^0-9]/g, '') || "0") }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5) : []
+  ), [softwares]);
+
+  const totalDownloads = React.useMemo(() => (
+    Array.isArray(softwares) ? softwares.reduce((acc, curr: any) => acc + parseInt(curr.downloads?.replace(/[^0-9]/g, '') || "0"), 0) : 0
+  ), [softwares]);
 
   const stats = [
     { label: "Tổng người dùng", value: "1,284", icon: Users, change: "+12%", color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Số lượng Apps", value: softwares.length.toString(), icon: Package, change: "+3", color: "text-primary", bg: "bg-primary/10" },
+    { label: "Số lượng Apps", value: softwares?.length?.toString() || "0", icon: Package, change: "+3", color: "text-primary", bg: "bg-primary/10" },
     { label: "Lượt tải về", value: `${(totalDownloads / 1000).toFixed(1)}K`, icon: Download, change: "+18%", color: "text-green-500", bg: "bg-green-500/10" },
     { label: "Lượt tải hôm nay", value: "842", icon: Activity, change: "+5.4%", color: "text-orange-500", bg: "bg-orange-500/10" },
   ];

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { softwares } from "@/lib/software-data";
-import { ChevronLeft, ChevronRight, Search, LayoutGrid, List } from "lucide-react";
+import { getSoftwares } from "@/lib/api/softwares";
+import { ChevronLeft, ChevronRight, Search, LayoutGrid, List, MoreVertical } from "lucide-react";
 
 type SoftwaresSearch = {
   category?: string;
@@ -13,11 +13,12 @@ type SoftwaresSearch = {
 export const Route = createFileRoute("/softwares")({
   validateSearch: (search: Record<string, unknown>): SoftwaresSearch => {
     return {
-      category: (search.category as string) || undefined,
-      q: (search.q as string) || undefined,
-      page: Number(search.page) || 1,
+      category: (search?.category as string) || undefined,
+      q: (search?.q as string) || undefined,
+      page: Number(search?.page) || 1,
     };
   },
+  loader: ({ search }) => getSoftwares(search?.category, search?.q),
   component: SoftwaresList,
   head: () => ({
     meta: [
@@ -29,24 +30,17 @@ export const Route = createFileRoute("/softwares")({
 
 function SoftwaresList() {
   const { category, q, page = 1 } = Route.useSearch();
+  const softwares = (Route.useLoaderData() as any[]) || [];
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const itemsPerPage = 8;
 
-  const filteredData = useMemo(() => {
-    return softwares.filter((s) => {
-      const matchesCategory = !category || s.category.toLowerCase() === category.toLowerCase();
-      const matchesSearch = !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.description?.toLowerCase().includes(q.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [category, q]);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil((softwares?.length || 0) / itemsPerPage);
   const currentPage = Math.min(Math.max(1, page), totalPages || 1);
   
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage]);
+    return Array.isArray(softwares) ? softwares.slice(start, start + itemsPerPage) : [];
+  }, [softwares, currentPage]);
 
   return (
     <AppLayout activeTab={category || "Tất cả phần mềm"}>
@@ -58,7 +52,7 @@ function SoftwaresList() {
               {category ? `Danh mục: ${category}` : "Tất cả phần mềm"}
             </h1>
             <p className="text-muted-foreground font-medium">
-              Tìm thấy <span className="text-white">{filteredData.length}</span> sản phẩm phù hợp
+              Tìm thấy <span className="text-white">{softwares.length}</span> sản phẩm phù hợp
             </p>
           </div>
 
@@ -109,38 +103,37 @@ function SoftwaresList() {
             : "flex flex-col gap-4"
           }>
             {currentData.map((s) => (
-              <div key={s.id} className={`bg-card border border-border rounded-[24px] overflow-hidden transition-all hover:border-primary/30 group ${viewMode === 'list' ? "flex items-center p-4 gap-6" : "p-6"}`}>
+              <div key={s?.id} className={`bg-card border border-border rounded-[28px] overflow-hidden transition-all hover:-translate-y-1.5 hover:border-primary/30 group shadow-sm hover:shadow-xl ${viewMode === 'list' ? 'flex items-center p-4 gap-6' : 'p-6 flex flex-col'}`}>
                 <div 
-                  className={`rounded-[20px] flex items-center justify-center text-2xl font-black text-white shrink-0 ${viewMode === 'list' ? "size-16" : "size-[72px] mb-5"}`}
-                  style={{ background: `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` }}
+                  className={`rounded-[24px] flex items-center justify-center text-3xl font-black text-white shadow-lg shrink-0 ${viewMode === 'list' ? 'size-[80px]' : 'size-[100px] mx-auto mb-6'}`}
+                  style={{ background: s?.color ? `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` : 'var(--primary)' }}
                 >
-                  {s.letter}
+                  {s?.letter || '?'}
                 </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg mb-1 truncate">{s.name}</h3>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-                    <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-border text-[11px] font-bold uppercase tracking-wider">{s.category}</span>
-                    <span>•</span>
-                    <span>{s.version}</span>
-                    <span>•</span>
-                    <span>{s.size}</span>
+                
+                <div className={`flex-1 ${viewMode === 'list' ? '' : 'text-center'}`}>
+                  <div className="flex flex-wrap items-center gap-2 mb-3 justify-center md:justify-start">
+                    <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-border text-[11px] font-bold uppercase tracking-wider">{s?.category || 'Phần mềm'}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-green-500/10 text-green-500 text-[11px] font-black uppercase tracking-wider border border-green-500/10">v{s?.version || '1.0'}</span>
                   </div>
-                  {viewMode === 'list' && (
-                    <p className="text-muted-foreground text-sm line-clamp-1 mb-0 italic">
-                      {s.description || "Phần mềm chuyên dụng cho chuyên gia..."}
-                    </p>
-                  )}
-                </div>
-
-                <div className={viewMode === 'list' ? "shrink-0" : "mt-2"}>
-                  <Link
-                    to="/software/$id"
-                    params={{ id: s.id }}
-                    className="h-11 px-6 rounded-[14px] bg-primary text-white font-bold flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/10"
-                  >
-                    Chi tiết
-                  </Link>
+                  
+                  <h3 className="text-xl font-black mb-2 group-hover:text-primary transition-colors truncate">{s?.name || 'Phần mềm mới'}</h3>
+                  <p className="text-muted-foreground text-sm font-medium mb-6 line-clamp-2 leading-relaxed">
+                    {s?.description || "Phiên bản phần mềm mới nhất, tải về nhanh chóng và an toàn."}
+                  </p>
+                  
+                  <div className={`flex items-center gap-3 ${viewMode === 'list' ? '' : 'justify-center'}`}>
+                    <Link 
+                      to="/software/$id" 
+                      params={{ id: s?.id || '' }}
+                      className="h-11 px-6 rounded-xl bg-primary text-white font-bold text-sm flex items-center justify-center hover:bg-primary/90 transition-all flex-1 shadow-glow"
+                    >
+                      Tải về
+                    </Link>
+                    <button className="size-11 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center hover:bg-white/[0.08] transition-all text-muted-foreground hover:text-white">
+                      <MoreVertical className="size-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

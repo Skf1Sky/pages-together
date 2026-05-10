@@ -21,28 +21,10 @@ export function AppLayout({
   user?: { name: string; role: 'admin' | 'user' } | null;
 }) {
   const navigate = useNavigate();
-  const search = useRouterState({ select: (s) => s.location.search }) as any;
-  const [localSearch, setLocalSearch] = useState(search?.q || "");
+  const search = useRouterState({ select: (s) => s.location.search }) || {} as any;
+  const [localSearch, setLocalSearch] = useState((search as any)?.q || "");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      return saved ? saved === 'dark' : true;
-    }
-    return true;
-  });
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    // Sync theme with document and localStorage
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -90,13 +72,13 @@ export function AppLayout({
               search={item.search}
               onClick={() => setIsMobileMenuOpen(false)}
               className={`h-[54px] px-[18px] rounded-[16px] flex items-center justify-between transition-all border border-transparent ${
-                activeTab === item.name || (item.search?.category === activeTab)
+                activeTab === item.name || (item.search && typeof item.search === 'object' && (item.search as any).category === activeTab && activeTab !== "Trang chủ" && activeTab !== "Tất cả phần mềm")
                   ? "bg-primary/10 border-primary/25 text-primary"
                   : "text-muted-foreground hover:bg-secondary hover:border-border hover:text-foreground"
               }`}
             >
               <div className="flex items-center gap-3.5">
-                <item.icon className={`size-[18px] ${activeTab === item.name || (item.search?.category === activeTab) ? "text-primary" : ""}`} />
+                <item.icon className={`size-[18px] ${activeTab === item.name || (item.search && typeof item.search === 'object' && (item.search as any).category === activeTab && activeTab !== "Trang chủ" && activeTab !== "Tất cả phần mềm") ? "text-primary" : ""}`} />
                 <span className="font-bold">{item.name}</span>
               </div>
               {(item as any).badge && (
@@ -109,15 +91,7 @@ export function AppLayout({
         </nav>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-secondary transition-all border border-transparent"
-        >
-          {isDarkMode ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-          <span className="font-bold">{isDarkMode ? 'Chế độ sáng' : 'Chế độ tối'}</span>
-        </button>
-
+      <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
         <Link
           to="/about"
           onClick={() => setIsMobileMenuOpen(false)}

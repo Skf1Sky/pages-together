@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Search, Zap, Shield, Laptop, LayoutGrid, User, Lock, LogIn, ChevronRight, HardHat, Palette, Briefcase, LogOut, Settings, ExternalLink, Users, X, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { softwares } from "@/lib/software-data";
+import { getSoftwares } from "@/lib/api/softwares";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 
 type SoftwareSearch = {
   category?: string;
@@ -11,9 +13,10 @@ type SoftwareSearch = {
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): SoftwareSearch => {
     return {
-      category: (search.category as string) || undefined,
+      category: (search?.category as string) || undefined,
     };
   },
+  loader: ({ search }) => getSoftwares(search?.category),
   component: Index,
   head: () => ({ 
     meta: [
@@ -23,20 +26,22 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-import { useAuthStore } from "@/lib/auth-store";
 import { toast } from "sonner";
 
 function Index() {
   const { category } = Route.useSearch();
+  const softwares = Route.useLoaderData() || [];
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, login, logout } = useAuthStore();
+  const { user, profile, isAdmin } = useAuth();
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const filteredSoftwares = softwares.filter((s) => {
-    const matchesCategory = !category || s.category.toLowerCase() === category.toLowerCase();
-    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredSoftwares = Array.isArray(softwares) 
+    ? softwares.filter((s: any) => {
+        const matchesSearch = s?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesSearch;
+      })
+    : [];
 
   const isHomePage = !category;
 
@@ -55,16 +60,9 @@ function Index() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if ((username === "admin" && password === "admin") || (username === "xhome" && password === "xhome")) {
-      login({ username });
-      setLoginError(null);
-      toast.success("Đăng nhập thành công!");
-    } else {
-      setLoginError("Sai thông tin đăng nhập!");
-      toast.error("Đăng nhập thất bại");
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.info("Đã đăng xuất");
   };
 
   const rightPanel = (
@@ -77,15 +75,15 @@ function Index() {
             <div className="flex items-center gap-4">
               <div className="size-[64px] rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                 <img 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
+                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
                   alt="Avatar" 
                   className="size-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="text-xl font-black tracking-tight">{user.name}</h3>
+                <h3 className="text-xl font-black tracking-tight truncate max-w-[150px]">{profile?.full_name || user.email?.split('@')[0]}</h3>
                 <p className="text-primary text-[13px] font-bold uppercase tracking-wider">
-                  {user.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
+                  {isAdmin ? 'Quản trị viên' : 'Người dùng'}
                 </p>
               </div>
             </div>
@@ -93,7 +91,7 @@ function Index() {
             <div className="h-px bg-border w-full" />
 
             <div className="flex flex-col gap-2">
-              {user.role === 'admin' && (
+              {isAdmin && (
                 <>
                   <Link 
                     to="/admin"
@@ -125,12 +123,7 @@ function Index() {
               </button>
 
               <button 
-                onClick={() => {
-                  logout();
-                  setUsername("");
-                  setPassword("");
-                  toast.info("Đã đăng xuất");
-                }}
+                onClick={handleLogout}
                 className="h-[52px] px-5 rounded-[14px] bg-red-500/10 border border-red-500/20 text-red-500 font-bold flex items-center gap-3 hover:bg-red-500 hover:text-white transition-all mt-2"
               >
                 <LogOut className="size-[18px]" />
@@ -141,7 +134,7 @@ function Index() {
         ) : (
           /* CLICKABLE LOGIN CARD */
           <Link 
-            to="/admin/login"
+            to="/login"
             className="flex flex-col gap-6 group cursor-pointer"
           >
             <div>
@@ -283,18 +276,18 @@ function Index() {
           {filteredSoftwares.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {filteredSoftwares.map((s) => (
-                <div key={s.id} className="bg-[#141414] border border-[#222] rounded-[24px] p-5 transition-all hover:-translate-y-1 hover:border-primary/25 group">
+                <div key={s?.id} className="bg-[#141414] border border-[#222] rounded-[24px] p-5 transition-all hover:-translate-y-1 hover:border-primary/25 group">
                   <div 
                     className="size-[72px] rounded-[20px] mb-4 flex items-center justify-center text-2xl font-black text-white"
-                    style={{ background: `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` }}
+                    style={{ background: s?.color ? `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` : 'var(--primary)' }}
                   >
-                    {s.letter}
+                    {s?.letter || '?'}
                   </div>
-                  <div className="font-bold mb-1 truncate">{s.name}</div>
-                  <div className="text-muted-foreground text-[13px] mb-4">{s.category}</div>
+                  <div className="font-bold mb-1 truncate">{s?.name || 'Chưa đặt tên'}</div>
+                  <div className="text-muted-foreground text-[13px] mb-4">{s?.category || 'Chưa phân loại'}</div>
                   <Link
                     to="/software/$id"
-                    params={{ id: s.id }}
+                    params={{ id: s?.id || '' }}
                     onClick={handleDownload}
                     className="w-full h-11 rounded-[14px] bg-primary text-white font-bold flex items-center justify-center group-hover:bg-primary/90 transition-colors"
                   >

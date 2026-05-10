@@ -1,16 +1,27 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, ShieldCheck, Download, Check, AlertCircle, Star, MessageSquare, Users, Copy, ChevronRight, HardHat, Cpu, Monitor, Save, Share2, Eye, Database } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import { softwares } from "@/lib/software-data";
-import { useState, useMemo } from "react";
+import { getSoftwareBySlug, getSoftwares } from "@/lib/api/softwares";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/software/$id")({
   component: SoftwareDetail,
-  loader: ({ params }) => {
-    const sw = softwares.find((s) => s.id === params.id);
-    if (!sw) throw notFound();
-    return sw;
+  loader: async ({ params }) => {
+    try {
+      const sw = await getSoftwareBySlug(params.id);
+      if (!sw) throw notFound();
+      
+      // Also fetch related softwares
+      const related = await getSoftwares(sw?.category);
+      
+      return { 
+        software: sw, 
+        related: related.filter((r: any) => r.id !== sw.id).slice(0, 4) 
+      };
+    } catch (e) {
+      throw notFound();
+    }
   },
   notFoundComponent: () => (
     <AppLayout>
@@ -29,28 +40,25 @@ export const Route = createFileRoute("/software/$id")({
   errorComponent: ({ error }) => <div className="p-10 text-red-500 font-bold">{error.message}</div>,
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.name ?? "Phần mềm"} — X Apps` },
-      { name: "description", content: loaderData?.description ?? "Chi tiết phần mềm và link tải an toàn." },
+      { title: `${loaderData?.software?.name ?? "Phần mềm"} — X Apps` },
+      { name: "description", content: loaderData?.software?.description ?? "Chi tiết phần mềm và link tải an toàn." },
     ],
   }),
 });
 
 function SoftwareDetail() {
-  const s = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
+  if (!loaderData || !loaderData.software) return null;
+  
+  const { software: s, related: relatedSoftwares } = loaderData;
   const [activeImg, setActiveImg] = useState(0);
   
   // Mock screenshots if missing
-  const screenshots = s.screenshots || [
+  const screenshots = (s as any).screenshots?.length > 0 ? (s as any).screenshots : [
     `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80`,
     `https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80`,
     `https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&q=80`
   ];
-
-  const relatedSoftwares = useMemo(() => {
-    return softwares
-      .filter((item) => item.category === s.category && item.id !== s.id)
-      .slice(0, 4);
-  }, [s.id, s.category]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -65,7 +73,7 @@ function SoftwareDetail() {
         <nav className="flex items-center gap-3 text-sm font-bold text-muted-foreground mb-8 overflow-x-auto whitespace-nowrap pb-2">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <ChevronRight className="size-4 shrink-0" />
-          <Link to="/softwares" search={{ category: s.category }} className="hover:text-primary transition-colors">{s.category}</Link>
+          <Link to="/softwares" search={{ category: s?.category }} className="hover:text-primary transition-colors">{s?.category || 'Phần mềm'}</Link>
           <ChevronRight className="size-4 shrink-0" />
           <span className="text-white truncate">{s.name}</span>
         </nav>
@@ -89,7 +97,7 @@ function SoftwareDetail() {
                 
                 <div className="flex-1 text-center md:text-left">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
-                    <span className="px-4 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-black uppercase tracking-widest border border-primary/20">{s.category}</span>
+                    <span className="px-4 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-black uppercase tracking-widest border border-primary/20">{s?.category || 'Phần mềm'}</span>
                     <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-green-500/10 text-green-500 text-[11px] font-black uppercase tracking-widest border border-green-500/20">
                       <ShieldCheck className="size-3.5" /> An toàn
                     </span>
@@ -339,7 +347,7 @@ function SoftwareDetail() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm truncate group-hover:text-primary transition-colors">{sw.name}</div>
-                      <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{sw.category}</div>
+                      <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{sw?.category || 'Phần mềm'}</div>
                     </div>
                   </Link>
                 ))}

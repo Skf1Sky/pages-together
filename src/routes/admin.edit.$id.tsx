@@ -2,16 +2,12 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { ArrowLeft, Save, X, Plus, Info, ListOrdered, Download, Image as ImageIcon, Upload, FileArchive, CheckCircle2, AlertCircle, Trash2, Layout, Type, Bold, Italic, Link as LinkIcon, List } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { softwares } from "@/lib/software-data";
+import { getSoftwareBySlug } from "@/lib/api/softwares";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/edit/$id")({
   component: EditSoftware,
-  loader: ({ params }) => {
-    const sw = softwares.find((s) => s.id === params.id);
-    if (!sw) throw notFound();
-    return sw;
-  },
+  loader: ({ params }) => getSoftwareBySlug(params.id),
 });
 
 // --- COMPONENTS ---
@@ -54,11 +50,13 @@ function EditSoftware() {
   const s = Route.useLoaderData();
   const navigate = useNavigate();
   
-  const [name, setName] = useState(s.name);
-  const [category, setCategory] = useState(s.category);
-  const [iconUrl, setIconUrl] = useState(s.color); // Mocking icon
+  if (!s) return null;
+  
+  const [name, setName] = useState(s.name || "");
+  const [category, setCategory] = useState(s.category || "Xây Dựng");
+  const [iconUrl, setIconUrl] = useState(s.icon_url || ""); 
   const [screenshots, setScreenshots] = useState<string[]>(s.screenshots || []);
-  const [versions, setVersions] = useState(s.versions.map(v => ({ ...v, file: null as File | null, uploading: false, progress: 100 })));
+  const [versions, setVersions] = useState((s.versions || []).map((v: any) => ({ ...v, file: null as File | null, uploading: false, progress: 100 })));
   const [description, setDescription] = useState(s.description || "");
   const [guide, setGuide] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});

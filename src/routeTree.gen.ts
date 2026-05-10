@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SoftwaresRouteImport } from './routes/softwares'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -34,6 +35,11 @@ const SupportRoute = SupportRouteImport.update({
 const SoftwaresRoute = SoftwaresRouteImport.update({
   id: '/softwares',
   path: '/softwares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/contact'
+    | '/login'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/contact'
+    | '/login'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/contact'
+    | '/login'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
+  LoginRoute: typeof LoginRoute
   SoftwaresRoute: typeof SoftwaresRoute
   SupportRoute: typeof SupportRoute
   SoftwareIdRoute: typeof SoftwareIdRoute
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/softwares'
       fullPath: '/softwares'
       preLoaderRoute: typeof SoftwaresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
+  LoginRoute: LoginRoute,
   SoftwaresRoute: SoftwaresRoute,
   SupportRoute: SupportRoute,
   SoftwareIdRoute: SoftwareIdRoute,

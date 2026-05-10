@@ -1,7 +1,6 @@
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Edit, Trash2, Search, Filter, MoreVertical, Eye, EyeOff, CheckSquare, Square, ArrowUpDown, ExternalLink, ChevronDown } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
-import { softwares } from "@/lib/software-data";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
@@ -20,6 +19,7 @@ type SortConfig = {
 const ITEMS_PER_PAGE = 8;
 
 function AdminSoftwares() {
+  const softwares = Route.useLoaderData() || [];
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "name", direction: "asc" });
@@ -27,22 +27,24 @@ function AdminSoftwares() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{ id?: string, type: 'single' | 'bulk' }>({ type: 'single' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [visibilityMap, setVisibilityMap] = useState<Record<string, boolean>>(
-    Object.fromEntries(softwares.map(s => [s.id, true]))
-  );
+  const [visibilityMap, setVisibilityMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    if (softwares.length > 0) {
+      setVisibilityMap(Object.fromEntries(softwares.map((s: any) => [s.id, s.is_active !== false])));
+    }
     const timer = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [softwares]);
 
   const filteredAndSorted = useMemo(() => {
-    let result = softwares.filter(s => 
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.category.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!Array.isArray(softwares)) return [];
+    let result = softwares.filter((s: any) => 
+      s?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s?.category?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    result.sort((a, b) => {
+    result.sort((a: any, b: any) => {
       const valA = a[sortConfig.key] || "";
       const valB = b[sortConfig.key] || "";
       
@@ -54,7 +56,7 @@ function AdminSoftwares() {
     });
 
     return result;
-  }, [searchTerm, sortConfig]);
+  }, [softwares, searchTerm, sortConfig]);
 
   const totalPages = Math.ceil(filteredAndSorted.length / ITEMS_PER_PAGE);
   const paginatedData = filteredAndSorted.slice(
@@ -227,7 +229,7 @@ function AdminSoftwares() {
                     </td>
                     <td className="px-8 py-6">
                       <span className="px-3 py-1 rounded-full bg-secondary border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        {s.category}
+                        {s?.category || 'Phần mềm'}
                       </span>
                     </td>
                     <td className="px-8 py-6">
