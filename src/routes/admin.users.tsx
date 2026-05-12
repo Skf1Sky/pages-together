@@ -1,72 +1,150 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  MoreHorizontal, 
-  Trash2, 
-  Shield, 
-  User as UserIcon,
-  Mail,
-  Calendar,
-  X,
-  FileDown,
-  Activity,
-  Ban,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  ChevronRight,
-  Filter
+  Users, UserPlus, Search, MoreHorizontal, Trash2, Shield, User as UserIcon,
+  Mail, Calendar, X, FileDown, Activity, Ban, CheckCircle2, Clock,
+  ExternalLink, ChevronRight, Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { Pagination } from "@/components/Pagination";
+import { getUsers, updateUserRole, updateUserStatus, deleteUserProfile } from "@/lib/api/users";
 
 export const Route = createFileRoute("/admin/users")({
+  loader: () => getUsers(),
   component: AdminUsers,
 });
 
 type UserRole = "admin" | "uploader" | "viewer";
 type UserStatus = "active" | "banned" | "pending";
 
-type UserData = {
-  id: string;
-  name: string;
-  username: string;
-  role: UserRole;
-  status: UserStatus;
-  email: string;
-  joinDate: string;
-  downloads: number;
-  lastActive: string;
-};
-
-const INITIAL_USERS: UserData[] = [
-  { id: "1", name: "Administrator", username: "admin", role: "admin", status: "active", email: "admin@xapps.com", joinDate: "2024-01-10", downloads: 0, lastActive: "Just now" },
-  { id: "2", name: "Trần Thế Vinh", username: "vinh.tt", role: "uploader", status: "active", email: "vinh.tt@xapps.com", joinDate: "2024-04-12", downloads: 42, lastActive: "2 hours ago" },
-  { id: "3", name: "Nguyễn Văn A", username: "nva", role: "viewer", status: "pending", email: "nva@example.com", joinDate: "2024-05-01", downloads: 5, lastActive: "1 day ago" },
-  { id: "4", name: "Lê Minh", username: "leminh", role: "viewer", status: "banned", email: "leminh@spam.com", joinDate: "2024-02-20", downloads: 120, lastActive: "3 months ago" },
-];
-
 const ITEMS_PER_PAGE = 10;
 
 function AdminUsers() {
-  const [users, setUsers] = useState<UserData[]>(INITIAL_USERS);
+  const router = useRouter();
+  const initialUsers = Route.useLoaderData() as any[];
+  const [users, setUsers] = useState<any[]>(initialUsers || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   
-  // New user form state
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserUsername, setNewUserUsername] = useState("");
-  const [newUserRole, setNewUserRole] = useState<UserRole>("viewer");
+  // User form state (for both Add and Edit)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [formData, setFormData] = useState({
+    id: "",
+    full_name: "",
+    email: "",
+    role: "viewer" as UserRole,
+    password: "" // Only for reference or future use
+  });
 
+  const handleOpenAddModal = () => {
+    setModalMode('add');
+    setFormData({ id: "", full_name: "", email: "", role: "viewer", password: "" });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (user: any) => {
+    setModalMode('edit');
+    setFormData({ 
+      id: user.id, 
+      full_name: user.full_name || "", 
+      email: user.email || "", 
+      role: user.role || "viewer",
+      password: "" 
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (modalMode === 'add') {
+        // 1. Create Auth User using Admin API (Does NOT logout current admin)
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: formData.email,
+          password: formData.password || "12345678", 
+          email_confirm: true, // Mark as confirmed immediately
+          user_metadata: {
+            full_name: formData.full_name,
+            role: formData.role
+          }
+        });
+
+        if (authError) throw authError;
+
+        // 2. Profile record update
+        if (authData.user) {
+          const { error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .update({ 
+              full_name: formData.full_name,
+              role: formData.role 
+            })
+            .eq('id', authData.user.id);
+          
+          if (profileError) console.error("Profile update error:", profileError);
+        }
+
+        toast.success("Đã tạo tài khoản và tự động xác thực email!");
+      } else {
+        // Update existing user
+        console.log("Updating user:", formData.id, formData.email);
+        
+        // 1. Update Auth data (Email/Password/Confirm)
+        const updateData: any = {
+          email: formData.email,
+          email_confirm: true 
+        };
+        if (formData.password && formData.password.trim() !== "") {
+          updateData.password = formData.password;
+        }
+
+        const { data: authUpdate, error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+          formData.id,
+          updateData
+        );
+
+        if (authError) {
+          console.error("Auth Update Error:", authError);
+          throw new Error(`Lỗi cập nhật Tài khoản: ${authError.message}`);
+        }
+
+        // 2. Update Profile data (Name/Role/Email)
+        const { error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            full_name: formData.full_name,
+            role: formData.role,
+            email: formData.email // Sync email to profile
+          })
+          .eq('id', formData.id);
+
+        if (profileError) {
+          console.error("Profile Update Error:", profileError);
+          throw new Error(`Lỗi cập nhật Hồ sơ: ${profileError.message}`);
+        }
+        
+        toast.success("Đã cập nhật thông tin và xác thực tài khoản thành công!");
+      }
+
+      setIsModalOpen(false);
+      // Force a hard refresh of the list data
+      const updatedUsers = await getUsers();
+      setUsers(updatedUsers);
+      router.invalidate();
+    } catch (error: any) {
+      console.error("General Error:", error);
+      toast.error(error.message || "Đã có lỗi xảy ra");
+    }
+  };
+  
   const filteredUsers = useMemo(() => {
-    return users.filter(u => 
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      u.username.toLowerCase().includes(searchTerm.toLowerCase())
+    return (users || []).filter(u => 
+      (u.full_name || u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [users, searchTerm]);
 
@@ -76,36 +154,57 @@ function AdminUsers() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleAddUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newUser: UserData = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newUserName,
-      username: newUserUsername,
-      role: newUserRole,
-      status: "active",
-      email: `${newUserUsername}@xapps.com`,
-      joinDate: new Date().toISOString().split('T')[0],
-      downloads: 0,
-      lastActive: "Now"
-    };
-    setUsers([newUser, ...users]);
-    setIsAddModalOpen(false);
-    toast.success("Đã tạo người dùng mới thành công!");
-    setNewUserName("");
-    setNewUserUsername("");
-    setNewUserRole("viewer");
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'active' ? 'banned' : 'active';
+    try {
+      await updateUserStatus(id, nextStatus);
+      setUsers(users.map(u => u.id === id ? { ...u, status: nextStatus } : u));
+      toast.success(`Đã chuyển trạng thái người dùng sang ${nextStatus}`);
+    } catch (error: any) {
+      toast.error("Lỗi: " + error.message);
+    }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setUsers(users.map(u => {
-      if (u.id === id) {
-        const nextStatus: UserStatus = u.status === 'active' ? 'banned' : 'active';
-        toast.info(`Đã chuyển trạng thái sang ${nextStatus}`);
-        return { ...u, status: nextStatus };
+  const handleDeleteUser = async (id: string) => {
+    // 1. Prevent self-deletion
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user.id === id) {
+      toast.error("Bạn không thể tự xóa chính mình!");
+      return;
+    }
+
+    if (confirm("CẢNH BÁO: Bạn có chắc chắn muốn xóa VĨNH VIỄN người dùng này? Thao tác này không thể hoàn tác và sẽ xóa sạch mọi dữ liệu liên quan.")) {
+      try {
+        // 2. Delete from Auth (This handles cascading delete to profiles if configured, but we do it manually to be sure)
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+        if (authError) throw authError;
+
+        // 3. Delete from Profiles (in case cascade is off)
+        await supabase.from('profiles').delete().eq('id', id);
+
+        setUsers(users.filter(u => u.id !== id));
+        toast.success("Đã xóa vĩnh viễn người dùng thành công!");
+        router.invalidate();
+      } catch (error: any) {
+        toast.error("Lỗi khi xóa: " + error.message);
       }
-      return u;
-    }));
+    }
+  };
+
+  const handleRoleChange = async (id: string, role: string) => {
+    try {
+      await updateUserRole(id, role);
+      setUsers(users.map(u => u.id === id ? { ...u, role } : u));
+      toast.success(`Đã cập nhật quyền thành ${role}`);
+    } catch (error: any) {
+      toast.error("Lỗi: " + error.message);
+    }
+  };
+
+  const handleEditUser = (user: UserData) => {
+    setSelectedUser(user);
+    // For simplicity, we use the same modal or just toast for now, 
+    // but the request asks for a modal. I'll update the existing modal to be an edit modal.
   };
 
   const exportToCSV = () => {
@@ -138,7 +237,7 @@ function AdminUsers() {
             Xuất CSV
           </button>
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={handleOpenAddModal}
             className="h-[52px] px-6 rounded-2xl bg-primary text-white font-black flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             <UserPlus className="size-5" />
@@ -204,34 +303,40 @@ function AdminUsers() {
                 <tr key={user.id} className={`hover:bg-primary/[0.02] transition-colors group ${user.status === 'banned' ? "opacity-60" : ""}`}>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="size-11 rounded-2xl bg-white/[0.05] border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
+                      <div className="size-10 rounded-xl overflow-hidden border border-border bg-secondary shrink-0">
                         <img 
-                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
+                          src={user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.full_name || user.email}`} 
                           alt="Avatar" 
                           className="size-full object-cover"
                           loading="lazy"
                         />
                       </div>
                       <div>
-                        <div className="font-bold text-sm group-hover:text-primary transition-colors">{user.name}</div>
+                        <div className="font-bold text-sm group-hover:text-primary transition-colors">{user.full_name || "N/A"}</div>
                         <div className="text-[10px] text-muted-foreground font-bold">{user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
-                      user.role === 'admin' 
-                        ? "bg-primary/10 text-primary border-primary/20" 
-                        : user.role === 'uploader'
-                          ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
-                          : "bg-white/[0.05] text-muted-foreground border-border"
-                    }`}>
-                      {user.role}
-                    </span>
+                    <select 
+                      value={user.role} 
+                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border bg-transparent cursor-pointer transition-all focus:outline-none ${
+                        user.role === 'admin' 
+                          ? "bg-primary/10 text-primary border-primary/20" 
+                          : user.role === 'uploader'
+                            ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                            : "bg-white/[0.05] text-muted-foreground border-border"
+                      }`}
+                    >
+                      <option value="viewer" className="bg-card text-foreground">Viewer</option>
+                      <option value="uploader" className="bg-card text-foreground">Uploader</option>
+                      <option value="admin" className="bg-card text-foreground">Admin</option>
+                    </select>
                   </td>
                   <td className="px-6 py-5">
                     <button 
-                      onClick={() => handleToggleStatus(user.id)}
+                      onClick={() => handleToggleStatus(user.id, user.status)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${
                         user.status === 'active' 
                           ? "bg-green-500/10 text-green-500 border-green-500/20" 
@@ -241,13 +346,13 @@ function AdminUsers() {
                       }`}
                     >
                       {user.status === 'active' ? <CheckCircle2 className="size-3" /> : user.status === 'pending' ? <Clock className="size-3" /> : <Ban className="size-3" />}
-                      {user.status}
+                      {user.status || 'active'}
                     </button>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-white">{user.downloads} lượt tải</span>
-                      <span className="text-[10px] text-muted-foreground">{user.lastActive}</span>
+                      <span className="text-xs font-bold text-white">{user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Ngày tham gia</span>
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
@@ -259,8 +364,19 @@ function AdminUsers() {
                       >
                         <ExternalLink className="size-4" />
                       </button>
-                      <button className="size-9 flex items-center justify-center rounded-xl hover:bg-white/[0.05] transition-colors text-muted-foreground hover:text-primary">
+                      <button 
+                        onClick={() => handleOpenEditModal(user)}
+                        className="size-9 flex items-center justify-center rounded-xl hover:bg-white/[0.05] transition-colors text-muted-foreground hover:text-primary"
+                        title="Chỉnh sửa"
+                      >
                         <MoreHorizontal className="size-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="size-9 flex items-center justify-center rounded-xl hover:bg-white/[0.05] transition-colors text-muted-foreground hover:text-red-500"
+                        title="Xóa"
+                      >
+                        <Trash2 className="size-4" />
                       </button>
                     </div>
                   </td>
@@ -302,7 +418,45 @@ function AdminUsers() {
             </header>
 
             <div className="space-y-6">
-              <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Lịch sử hoạt động gần đây</h4>
+              <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Quản lý tài khoản</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Phân quyền</label>
+                  <select 
+                    value={selectedUser.role} 
+                    onChange={(e) => {
+                      const newRole = e.target.value as UserRole;
+                      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, role: newRole } : u));
+                      setSelectedUser({ ...selectedUser, role: newRole });
+                      toast.success(`Đã đổi quyền sang ${newRole}`);
+                    }}
+                    className="w-full h-12 px-4 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 outline-none font-bold text-sm"
+                  >
+                    <option value="viewer">Viewer</option>
+                    <option value="uploader">Uploader</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Trạng thái</label>
+                  <select 
+                    value={selectedUser.status} 
+                    onChange={(e) => {
+                      const newStatus = e.target.value as UserStatus;
+                      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: newStatus } : u));
+                      setSelectedUser({ ...selectedUser, status: newStatus });
+                      toast.success(`Đã đổi trạng thái sang ${newStatus}`);
+                    }}
+                    className="w-full h-12 px-4 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 outline-none font-bold text-sm"
+                  >
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="banned">Banned</option>
+                  </select>
+                </div>
+              </div>
+
+              <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground pt-4">Lịch sử hoạt động gần đây</h4>
               <div className="space-y-3">
                 {[
                   { action: "Tải xuống AutoCAD 2024", time: "2 giờ trước", icon: FileDown },
@@ -322,43 +476,62 @@ function AdminUsers() {
               </div>
             </div>
             
-            <button className="w-full h-14 mt-10 rounded-2xl bg-primary text-white font-black hover:shadow-xl hover:shadow-primary/20 transition-all">
-              Gửi tin nhắn cho người dùng
+            <button 
+              onClick={() => setSelectedUser(null)}
+              className="w-full h-14 mt-10 rounded-2xl bg-primary text-white font-black hover:shadow-xl hover:shadow-primary/20 transition-all"
+            >
+              Lưu và Đóng
             </button>
           </div>
         </div>
       )}
 
-      {/* ADD USER MODAL */}
-      {isAddModalOpen && (
+      {/* ADD/EDIT USER MODAL */}
+      {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)} />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
           <div className="relative w-full max-w-md bg-card border border-border rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-200">
             <header className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-black tracking-tight">Thêm user mới</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-muted-foreground hover:text-white"><X className="size-6" /></button>
+              <h3 className="text-2xl font-black tracking-tight">
+                {modalMode === 'add' ? 'Thêm user mới' : 'Chỉnh sửa user'}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-muted-foreground hover:text-white"><X className="size-6" /></button>
             </header>
 
-            <form onSubmit={handleAddUser} className="space-y-6">
+            <form onSubmit={handleSaveUser} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Tên hiển thị</label>
                 <input 
                   required
-                  value={newUserName}
-                  onChange={(e) => setNewUserName(e.target.value)}
-                  className="w-full h-14 px-5 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 transition-colors font-medium outline-none"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                  className="w-full h-12 px-5 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 transition-colors font-medium outline-none"
                   placeholder="Ví dụ: Nguyễn Văn A"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Username</label>
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Email</label>
                 <input 
                   required
-                  value={newUserUsername}
-                  onChange={(e) => setNewUserUsername(e.target.value)}
-                  className="w-full h-14 px-5 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 transition-colors font-medium outline-none"
-                  placeholder="Ví dụ: nva123"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full h-12 px-5 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 transition-colors font-medium outline-none"
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  {modalMode === 'add' ? 'Mật khẩu' : 'Mật khẩu mới (Để trống nếu không đổi)'}
+                </label>
+                <input 
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="w-full h-12 px-5 bg-white/[0.03] border border-border rounded-xl focus:border-primary/50 transition-colors font-medium outline-none"
+                  placeholder={modalMode === 'add' ? "Nhập mật khẩu ít nhất 6 ký tự" : "Nhập mật khẩu mới..."}
                 />
               </div>
 
@@ -369,8 +542,8 @@ function AdminUsers() {
                     <button 
                       key={r}
                       type="button"
-                      onClick={() => setNewUserRole(r)}
-                      className={`h-11 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${newUserRole === r ? "bg-primary text-white border-primary" : "bg-white/[0.03] border-border text-muted-foreground hover:bg-white/[0.06]"}`}
+                      onClick={() => setFormData({...formData, role: r})}
+                      className={`h-10 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${formData.role === r ? "bg-primary text-white border-primary" : "bg-white/[0.03] border-border text-muted-foreground hover:bg-white/[0.06]"}`}
                     >
                       {r}
                     </button>
@@ -380,9 +553,9 @@ function AdminUsers() {
 
               <button 
                 type="submit"
-                className="w-full h-[60px] rounded-[24px] bg-primary text-white font-black text-lg hover:shadow-xl hover:shadow-primary/20 transition-all mt-4"
+                className="w-full h-[56px] rounded-[20px] bg-primary text-white font-black text-base hover:shadow-xl hover:shadow-primary/20 transition-all mt-4"
               >
-                Tạo tài khoản ngay
+                {modalMode === 'add' ? 'Tạo tài khoản ngay' : 'Lưu thay đổi'}
               </button>
             </form>
           </div>

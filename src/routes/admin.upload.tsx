@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Save, X, Plus, Info, ListOrdered, Download, Image as ImageIcon, Upload, FileArchive, CheckCircle2, AlertCircle, Trash2, Layout, Type, Bold, Italic, Link as LinkIcon, List } from "lucide-react";
 import { useState, useCallback, useRef } from "react";
 import { AppLayout } from "@/components/AppLayout";
+import { createSoftware, createVersion } from "@/lib/api/softwares";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/upload")({
@@ -49,45 +50,18 @@ function InputField({ label, placeholder, type = "text", value, onChange, error 
 function UploadSoftware() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [letter, setLetter] = useState("");
   const [category, setCategory] = useState("Xây Dựng");
   const [iconUrl, setIconUrl] = useState("");
   const [screenshots, setScreenshots] = useState<string[]>([]);
-  const [versions, setVersions] = useState([{ v: "", s: "", d: new Date().toLocaleDateString('vi-VN'), file: null as File | null, uploading: false, progress: 0 }]);
+  const [versions, setVersions] = useState([{ v: "", s: "", d: new Date().toLocaleDateString('vi-VN'), link: "" }]);
   const [description, setDescription] = useState("");
   const [guide, setGuide] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Simulation: File Upload
-  const simulateUpload = (index: number, file: File) => {
-    const newVersions = [...versions];
-    newVersions[index].uploading = true;
-    newVersions[index].file = file;
-    newVersions[index].s = (file.size / (1024 * 1024)).toFixed(1) + " MB";
-    setVersions(newVersions);
-
-    let prog = 0;
-    const interval = setInterval(() => {
-      prog += Math.random() * 30;
-      if (prog >= 100) {
-        prog = 100;
-        clearInterval(interval);
-        setVersions(prev => {
-          const v = [...prev];
-          v[index].uploading = false;
-          v[index].progress = 100;
-          return v;
-        });
-        toast.success(`Đã tải lên tệp: ${file.name}`);
-      } else {
-        setVersions(prev => {
-          const v = [...prev];
-          v[index].progress = prog;
-          return v;
-        });
-      }
-    }, 400);
-  };
-
+  // Simulation: File Upload (Removed as per user request to use links)
+  
   const handleIconDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -109,29 +83,84 @@ function UploadSoftware() {
   };
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!name) newErrors.name = "Bắt buộc";
-    if (!iconUrl) newErrors.icon = "Thiếu icon";
+    if (!name.trim()) {
+      toast.error("Vui lòng nhập tên phần mềm!");
+      return false;
+    }
     
-    versions.forEach((v, i) => {
-      if (!v.v) newErrors[`v-${i}`] = "Thiếu version";
-      if (v.v && !/^\d+(\.\d+)*$/.test(v.v)) newErrors[`v-${i}`] = "Định dạng sai (VD: 1.2.3)";
-    });
+    const hasLink = versions.some(v => v.link && v.link.trim());
+    if (!hasLink) {
+      toast.error("Vui lòng nhập ít nhất 1 link download!");
+      return false;
+    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving) return;
+
     if (validate()) {
-      toast.promise(new Promise(resolve => setTimeout(resolve, 1500)), {
-        loading: 'Đang lưu dữ liệu...',
+      setIsSaving(true);
+      
+      const savePromise = async () => {
+        // 1. Prepare software data
+        const finalLetter = letter || name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || "SW";
+        const finalIcon = iconUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${name}`;
+        const slug = name.toLowerCase()
+          .trim()
+          .replace(/ /g, '-')
+          .replace(/[^\w-]+/g, '');
+
+        // 2. Create software record
+        const software = await createSoftware({
+          name,
+          slug,
+          letter: finalLetter,
+          icon_url: finalIcon,
+          category,
+          description,
+          system_requirements: {
+            cpu: "Core i5 Gen 10",
+            ram: "8 GB",
+            disk: "10 GB",
+            os: "Windows 10/11 64-bit"
+          },
+          is_active: true
+        } as any);
+
+        // 3. Create versions
+        if (software && software.id) {
+          const versionPromises = versions
+            .filter(v => v.link && v.link.trim())
+            .map(v => createVersion({
+              software_id: software.id,
+              version: v.v || "1.0.0",
+              size: v.s || "Unknown size",
+              release_date: new Date().toISOString().split('T')[0],
+              download_url: v.link,
+              is_latest: true
+            }));
+          
+          if (versionPromises.length > 0) {
+            await Promise.all(versionPromises);
+          }
+        }
+        
+        setIsSaving(false);
+      };
+
+      toast.promise(savePromise(), {
+        loading: 'Đang lưu dữ liệu lên hệ thống...',
         success: 'Đã đăng phần mềm thành công!',
-        error: 'Có lỗi xảy ra, vui lòng thử lại.',
+        error: (err) => {
+          console.error("Save error:", err);
+          setIsSaving(false);
+          return `Lỗi: ${err.message || 'Không thể lưu dữ liệu'}`;
+        },
       });
-      setTimeout(() => navigate({ to: "/admin/softwares" }), 2000);
-    } else {
-      toast.error("Vui lòng kiểm tra lại thông tin!");
+
+      setTimeout(() => navigate({ to: "/admin/softwares" }), 2500);
     }
   };
 
@@ -152,10 +181,11 @@ function UploadSoftware() {
           <button className="h-12 px-6 rounded-2xl bg-white/[0.03] border border-border font-bold text-sm hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all">Huỷ</button>
           <button 
             onClick={handleSave}
-            className="h-12 px-8 rounded-2xl bg-primary text-white font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2"
+            disabled={isSaving}
+            className={`h-12 px-8 rounded-2xl bg-primary text-white font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2 ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <Save className="size-5" />
-            Publish ngay
+            {isSaving ? "Đang xử lý..." : "Publish ngay"}
           </button>
         </div>
       </div>
@@ -166,16 +196,23 @@ function UploadSoftware() {
           <FormSection title="Thông tin cơ bản" icon={Info}>
             <div className="md:col-span-2">
               <InputField 
-                label="Tên phần mềm" 
+                label="Tên phần mềm (Bắt buộc)" 
                 placeholder="VD: AutoCAD 2024" 
                 value={name} 
                 onChange={(e: any) => setName(e.target.value)}
                 error={errors.name}
               />
+              <InputField 
+                label="Ký tự đại diện (Tự động tạo nếu để trống)" 
+                placeholder="VD: AC" 
+                value={letter} 
+                onChange={(e: any) => setLetter(e.target.value.toUpperCase().slice(0, 2))}
+                error={errors.letter}
+              />
             </div>
             
             <div className="space-y-2.5">
-              <label className="text-sm font-bold text-muted-foreground ml-1">Icon (Drag & Drop)</label>
+              <label className="text-sm font-bold text-muted-foreground ml-1">Icon (Tùy chọn)</label>
               <div 
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleIconDrop}
@@ -202,7 +239,7 @@ function UploadSoftware() {
             </div>
 
             <div className="space-y-2.5">
-              <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục</label>
+              <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục (Tùy chọn)</label>
               <select 
                 value={category}
                 onChange={e => setCategory(e.target.value)}
@@ -310,8 +347,8 @@ function UploadSoftware() {
                   </button>
 
                   <InputField 
-                    label="Version" 
-                    placeholder="1.0.0" 
+                    label="Version (Tùy chọn)" 
+                    placeholder="VD: 1.0.0" 
                     value={v.v} 
                     onChange={(e: any) => {
                       const next = [...versions];
@@ -321,45 +358,27 @@ function UploadSoftware() {
                     error={errors[`v-${i}`]}
                   />
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">File Upload (.zip, .exe)</label>
-                    <div 
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => {
-                        e.preventDefault();
-                        const file = e.dataTransfer.files[0];
-                        if (file) simulateUpload(i, file);
-                      }}
-                      onClick={() => document.getElementById(`file-input-${i}`)?.click()}
-                      className={`h-24 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer transition-all ${v.file ? "bg-primary/5 border-primary/30" : "hover:border-primary/50 hover:bg-primary/5"}`}
-                    >
-                      {v.uploading ? (
-                        <div className="w-full px-6 text-center">
-                          <div className="text-[10px] font-black text-primary uppercase mb-2">Đang tải: {Math.round(v.progress)}%</div>
-                          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${v.progress}%` }} />
-                          </div>
-                        </div>
-                      ) : v.file ? (
-                        <div className="flex items-center gap-3 text-primary">
-                          <CheckCircle2 className="size-6" />
-                          <div className="text-left">
-                            <div className="text-xs font-black truncate max-w-[120px]">{v.file.name}</div>
-                            <div className="text-[10px] opacity-70">{v.s}</div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <FileArchive className="size-6 text-muted-foreground/30 mb-2" />
-                          <span className="text-[10px] font-bold text-muted-foreground/50 uppercase">Chọn file</span>
-                        </>
-                      )}
-                      <input id={`file-input-${i}`} type="file" hidden onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) simulateUpload(i, file);
-                      }} />
-                    </div>
-                  </div>
+                  <InputField 
+                    label="Link Download (Bắt buộc)" 
+                    placeholder="https://link-download.com/file.zip" 
+                    value={v.link || ""} 
+                    onChange={(e: any) => {
+                      const next = [...versions];
+                      next[i].link = e.target.value;
+                      setVersions(next);
+                    }}
+                  />
+
+                  <InputField 
+                    label="Dung lượng (Tùy chọn)" 
+                    placeholder="VD: 1.2 GB" 
+                    value={v.s} 
+                    onChange={(e: any) => {
+                      const next = [...versions];
+                      next[i].s = e.target.value;
+                      setVersions(next);
+                    }}
+                  />
                 </div>
               ))}
             </div>

@@ -26,9 +26,11 @@ export async function getSoftwares(category?: string, search?: string) {
       requirements: software.system_requirements,
       downloads: software.download_count?.toLocaleString() || "0",
       versions: software.versions?.map((v: any) => ({
+        id: v.id,
         v: v.version,
         s: v.size,
-        d: v.release_date
+        d: v.release_date,
+        link: v.download_url
       })) || []
     }))
   } catch (e) {
@@ -36,15 +38,34 @@ export async function getSoftwares(category?: string, search?: string) {
   }
 }
 
-export async function getSoftwareBySlug(slug: string) {
+export async function getSoftwareBySlug(slugOrId: string) {
   try {
-    const { data, error } = await supabase
+    // Try by slug first
+    let { data, error } = await supabase
       .from('softwares')
       .select('*, versions(*)')
-      .eq('slug', slug)
+      .eq('slug', slugOrId)
       .eq('is_active', true)
       .single()
     
+    // If not found by slug, try by id (UUID)
+    if (error || !data) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+      if (isUuid) {
+        const { data: idData, error: idError } = await supabase
+          .from('softwares')
+          .select('*, versions(*)')
+          .eq('id', slugOrId)
+          .eq('is_active', true)
+          .single()
+        
+        if (!idError && idData) {
+          data = idData;
+          error = null as any;
+        }
+      }
+    }
+
     if (error || !data) return null;
 
     return {
@@ -52,9 +73,11 @@ export async function getSoftwareBySlug(slug: string) {
       requirements: data.system_requirements,
       downloads: data.download_count?.toLocaleString() || "0",
       versions: data.versions?.map((v: any) => ({
+        id: v.id,
         v: v.version,
         s: v.size,
-        d: v.release_date
+        d: v.release_date,
+        link: v.download_url
       })) || []
     }
   } catch (e) {
@@ -66,6 +89,16 @@ export async function createSoftware(software: InsertSoftware) {
   const { data, error } = await supabase
     .from('softwares')
     .insert(software)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function createVersion(version: any) {
+  const { data, error } = await supabase
+    .from('versions')
+    .insert(version)
     .select()
     .single()
   if (error) throw error
@@ -84,10 +117,38 @@ export async function updateSoftware(id: string, updates: UpdateSoftware) {
 }
 
 export async function deleteSoftware(id: string) {
-  // Soft delete
+  // Permanent delete (cascading delete should be handled by DB or manually)
+  // 1. Delete versions first if not cascading
+  const { error: vError } = await supabase
+    .from('versions')
+    .delete()
+    .eq('software_id', id)
+  
+  if (vError) console.error("Error deleting versions:", vError)
+
+  // 2. Delete software
   const { error } = await supabase
     .from('softwares')
-    .update({ is_active: false })
+    .delete()
     .eq('id', id)
   if (error) throw error
+}
+
+export async function deleteVersion(id: string) {
+  const { error } = await supabase
+    .from('versions')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function updateVersion(id: string, updates: any) {
+  const { data, error } = await supabase
+    .from('versions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }

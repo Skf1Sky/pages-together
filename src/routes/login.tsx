@@ -10,6 +10,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch() as any;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
@@ -31,7 +32,8 @@ function LoginPage() {
         toast.error("Đăng nhập thất bại: " + error.message);
       } else {
         toast.success("Đăng nhập thành công!");
-        navigate({ to: "/admin" });
+        const redirectTo = search.redirect || "/admin";
+        navigate({ to: redirectTo });
       }
     } catch (err: any) {
       setError("Đã xảy ra lỗi không xác định.");

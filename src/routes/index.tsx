@@ -287,7 +287,7 @@ function Index() {
                   <div className="text-muted-foreground text-[13px] mb-4">{s?.category || 'Chưa phân loại'}</div>
                   <Link
                     to="/software/$id"
-                    params={{ id: s?.id || '' }}
+                    params={{ id: s?.slug || '' }}
                     onClick={handleDownload}
                     className="w-full h-11 rounded-[14px] bg-primary text-white font-bold flex items-center justify-center group-hover:bg-primary/90 transition-colors"
                   >

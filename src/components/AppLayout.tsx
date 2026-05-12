@@ -10,7 +10,8 @@ export function AppLayout({
   sidebarItems,
   isAdmin = false,
   onSearch,
-  user
+  user,
+  sidebarFooter
 }: { 
   children: React.ReactNode; 
   activeTab?: string; 
@@ -19,6 +20,7 @@ export function AppLayout({
   isAdmin?: boolean;
   onSearch?: (query: string) => void;
   user?: { name: string; role: 'admin' | 'user' } | null;
+  sidebarFooter?: React.ReactNode;
 }) {
   const navigate = useNavigate();
   const search = useRouterState({ select: (s) => s.location.search }) || {} as any;
@@ -91,25 +93,33 @@ export function AppLayout({
         </nav>
       </div>
 
-      <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-        <Link
-          to="/about"
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-secondary transition-all border border-transparent"
-        >
-          <Users className="size-[18px]" />
-          <span className="font-bold">Giới thiệu</span>
-        </Link>
+      {!isAdmin && (
+        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
+          <Link
+            to="/about"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-secondary transition-all border border-transparent"
+          >
+            <Users className="size-[18px]" />
+            <span className="font-bold">Giới thiệu</span>
+          </Link>
 
-        <Link
-          to="/support"
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-secondary transition-all border border-transparent"
-        >
-          <MessageSquare className="size-[18px]" />
-          <span className="font-bold">Hỗ trợ</span>
-        </Link>
-      </div>
+          <Link
+            to="/support"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="h-[54px] px-[18px] rounded-[16px] flex items-center gap-3.5 text-muted-foreground hover:bg-secondary transition-all border border-transparent"
+          >
+            <MessageSquare className="size-[18px]" />
+            <span className="font-bold">Hỗ trợ</span>
+          </Link>
+        </div>
+      )}
+      
+      {sidebarFooter && (
+        <div className="mt-auto pt-4">
+          {sidebarFooter}
+        </div>
+      )}
     </>
   );
 

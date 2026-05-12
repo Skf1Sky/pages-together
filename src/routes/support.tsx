@@ -9,6 +9,7 @@ import {
   ShieldCheck, 
   HelpCircle,
   ChevronRight,
+  ChevronDown,
   Search
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -22,6 +23,7 @@ function PublicSupport() {
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [category, setCategory] = useState("Lỗi link tải");
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
@@ -92,17 +94,45 @@ function PublicSupport() {
                 </div>
                 <div className="space-y-2.5">
                   <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Loại yêu cầu</label>
-                  <select 
-                    value={category}
-                    onChange={e => setCategory(e.target.value)}
-                    className="w-full h-14 px-6 bg-white/[0.02] border border-border rounded-2xl focus:border-primary/50 focus:outline-none transition-all font-bold appearance-none cursor-pointer text-white"
-                  >
-                    <option>Lỗi link tải</option>
-                    <option>Hỗ trợ cài đặt</option>
-                    <option>Báo lỗi phần mềm</option>
-                    <option>Yêu cầu app mới</option>
-                    <option>Góp ý hệ thống</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsSelectOpen(!isSelectOpen)}
+                      className="w-full h-14 px-6 bg-white/[0.02] border border-border rounded-2xl focus:border-primary/50 focus:outline-none transition-all font-bold text-left flex items-center justify-between group"
+                    >
+                      <span className={category ? "text-white" : "text-muted-foreground"}>
+                        {category || "Chọn loại yêu cầu"}
+                      </span>
+                      <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-300 ${isSelectOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isSelectOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsSelectOpen(false)} />
+                        <div className="absolute top-full left-0 w-full mt-2 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
+                          {[
+                            "Lỗi link tải",
+                            "Hỗ trợ cài đặt",
+                            "Báo lỗi phần mềm",
+                            "Yêu cầu app mới",
+                            "Góp ý hệ thống"
+                          ].map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => {
+                                setCategory(opt);
+                                setIsSelectOpen(false);
+                              }}
+                              className={`w-full px-6 py-3 text-left text-sm font-bold transition-colors hover:bg-primary/10 hover:text-primary ${category === opt ? "text-primary bg-primary/5" : "text-muted-foreground"}`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

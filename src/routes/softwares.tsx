@@ -114,7 +114,7 @@ function SoftwaresList() {
                 <div className={`flex-1 ${viewMode === 'list' ? '' : 'text-center'}`}>
                   <div className="flex flex-wrap items-center gap-2 mb-3 justify-center md:justify-start">
                     <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-border text-[11px] font-bold uppercase tracking-wider">{s?.category || 'Phần mềm'}</span>
-                    <span className="px-2 py-0.5 rounded-md bg-green-500/10 text-green-500 text-[11px] font-black uppercase tracking-wider border border-green-500/10">v{s?.version || '1.0'}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-green-500/10 text-green-500 text-[11px] font-black uppercase tracking-wider border border-green-500/10">v{s?.versions?.[0]?.v || '1.0'}</span>
                   </div>
                   
                   <h3 className="text-xl font-black mb-2 group-hover:text-primary transition-colors truncate">{s?.name || 'Phần mềm mới'}</h3>
@@ -125,7 +125,7 @@ function SoftwaresList() {
                   <div className={`flex items-center gap-3 ${viewMode === 'list' ? '' : 'justify-center'}`}>
                     <Link 
                       to="/software/$id" 
-                      params={{ id: s?.id || '' }}
+                      params={{ id: s?.slug || '' }}
                       className="h-11 px-6 rounded-xl bg-primary text-white font-bold text-sm flex items-center justify-center hover:bg-primary/90 transition-all flex-1 shadow-glow"
                     >
                       Tải về

@@ -1,4 +1,4 @@
-import { createLazyFileRoute, Link } from "@tanstack/react-router";
+import { createLazyFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Plus, Edit, Trash2, Search, Filter, MoreVertical, Eye, EyeOff, CheckSquare, Square, ArrowUpDown, ExternalLink, ChevronDown } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { SoftwareSkeleton } from "@/components/Skeleton";
 import { Pagination } from "@/components/Pagination";
+import { deleteSoftware } from "@/lib/api/softwares";
 
 export const Route = createLazyFileRoute("/admin/softwares")({
   component: AdminSoftwares,
@@ -100,12 +101,22 @@ function AdminSoftwares() {
     setIsConfirmOpen(true);
   };
 
-  const executeDelete = () => {
-    if (confirmData.type === 'bulk') {
-      toast.success(`Đã xóa ${selectedIds.length} phần mềm!`);
-      setSelectedIds([]);
-    } else {
-      toast.success(`Đã xóa phần mềm thành công!`);
+  const router = useRouter();
+  const executeDelete = async () => {
+    try {
+      if (confirmData.type === 'bulk') {
+        await Promise.all(selectedIds.map(id => deleteSoftware(id)));
+        toast.success(`Đã xóa ${selectedIds.length} phần mềm!`);
+        setSelectedIds([]);
+      } else if (confirmData.id) {
+        await deleteSoftware(confirmData.id);
+        toast.success(`Đã xóa phần mềm thành công!`);
+      }
+      // Invalidate the router to refresh data without full reload
+      router.invalidate();
+      setIsConfirmOpen(false);
+    } catch (err: any) {
+      toast.error(`Lỗi khi xóa: ${err.message}`);
     }
   };
 
@@ -223,7 +234,7 @@ function AdminSoftwares() {
                         </div>
                         <div>
                           <div className="font-bold text-[15px] group-hover:text-primary transition-colors">{s.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">v{s.version} • {s.size}</div>
+                          <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">Tổng số {s.versions?.length || 0} phiên bản</div>
                         </div>
                       </div>
                     </td>
@@ -248,7 +259,7 @@ function AdminSoftwares() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to="/software/$id"
-                          params={{ id: s.id }}
+                          params={{ id: s.slug }}
                           className="size-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
                           title="Xem trước"
                         >
@@ -256,7 +267,7 @@ function AdminSoftwares() {
                         </Link>
                         <Link
                           to="/admin/edit/$id"
-                          params={{ id: s.id }}
+                          params={{ id: s.slug }}
                           className="size-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                           title="Chỉnh sửa"
                         >

@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { ArrowLeft, Save, X, Plus, Info, ListOrdered, Download, Image as ImageIcon, Upload, FileArchive, CheckCircle2, AlertCircle, Trash2, Layout, Type, Bold, Italic, Link as LinkIcon, List } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { getSoftwareBySlug } from "@/lib/api/softwares";
+import { getSoftwareBySlug, updateSoftware, createVersion, deleteVersion, updateVersion } from "@/lib/api/softwares";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/edit/$id")({
@@ -53,17 +53,84 @@ function EditSoftware() {
   if (!s) return null;
   
   const [name, setName] = useState(s.name || "");
+  const [letter, setLetter] = useState(s.letter || "");
   const [category, setCategory] = useState(s.category || "Xây Dựng");
   const [iconUrl, setIconUrl] = useState(s.icon_url || ""); 
   const [screenshots, setScreenshots] = useState<string[]>(s.screenshots || []);
-  const [versions, setVersions] = useState((s.versions || []).map((v: any) => ({ ...v, file: null as File | null, uploading: false, progress: 100 })));
+  const [versions, setVersions] = useState((s.versions || []).map((v: any) => ({ ...v, link: v.link || "" })));
   const [description, setDescription] = useState(s.description || "");
   const [guide, setGuide] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSave = () => {
-    toast.success("Đã cập nhật phần mềm thành công!");
-    setTimeout(() => navigate({ to: "/admin/softwares" }), 1000);
+  const addVersion = () => {
+    setVersions([...versions, { v: "", s: "0 MB", d: new Date().toLocaleDateString('vi-VN'), link: "" }]);
+  };
+
+  const removeVersion = (index: number) => {
+    if (confirm("Bạn có chắc chắn muốn xóa phiên bản này?")) {
+      setVersions(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleSave = async () => {
+    const hasLink = versions.some(v => v.link);
+    if (!name) {
+      toast.error("Vui lòng nhập tên phần mềm!");
+      return;
+    }
+    if (!hasLink) {
+      toast.error("Vui lòng nhập ít nhất 1 link download!");
+      return;
+    }
+
+    const savePromise = async () => {
+      // 1. Update main software info
+      await updateSoftware(s.id, {
+        name,
+        letter,
+        category,
+        description,
+        is_active: true
+      } as any);
+      
+      // 2. Sync versions
+      const currentVersionIds = versions.map(v => v.id).filter(Boolean);
+      const originalVersionIds = (s.versions || []).map((v: any) => v.id);
+      
+      // 2.1 Delete removed versions
+      const idsToDelete = originalVersionIds.filter((id: string) => !currentVersionIds.includes(id));
+      for (const id of idsToDelete) {
+        await deleteVersion(id);
+      }
+
+      // 2.2 Update or Create versions
+      for (const v of versions) {
+        const versionData = {
+          software_id: s.id,
+          version: v.v || "1.0.0",
+          size: v.s || "Unknown size",
+          release_date: new Date().toISOString().split('T')[0],
+          download_url: v.link,
+          is_latest: true // Simplified logic
+        };
+
+        if (v.id) {
+          // Update existing
+          await updateVersion(v.id, versionData);
+        } else if (v.link) {
+          // Create new
+          await createVersion(versionData);
+        }
+      }
+    };
+
+    toast.promise(savePromise(), {
+      loading: 'Đang cập nhật dữ liệu...',
+      success: 'Đã cập nhật phần mềm thành công!',
+      error: (err: any) => `Lỗi: ${err.message || 'Không thể lưu dữ liệu'}`,
+    });
+
+    setTimeout(() => navigate({ to: "/admin/softwares" }), 1500);
   };
 
   const handleScreenshotDrop = (e: React.DragEvent) => {
@@ -103,23 +170,28 @@ function EditSoftware() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 flex flex-col">
           <FormSection title="Thông tin cơ bản" icon={Info}>
-            <div className="md:col-span-2">
-              <InputField label="Tên phần mềm" value={name} onChange={(e: any) => setName(e.target.value)} />
+            <div className="md:col-span-2 flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <InputField label="Tên phần mềm (Bắt buộc)" value={name} onChange={(e: any) => setName(e.target.value)} />
+              </div>
+              <div className="w-full md:w-48">
+                <InputField label="Letter (Tùy chọn)" value={letter} onChange={(e: any) => setLetter(e.target.value.toUpperCase().slice(0, 2))} />
+              </div>
             </div>
             
             <div className="space-y-2.5">
-              <label className="text-sm font-bold text-muted-foreground ml-1">Icon</label>
+              <label className="text-sm font-bold text-muted-foreground ml-1">Icon (Tùy chọn)</label>
               <div 
                 className="aspect-square size-32 rounded-[32px] border-2 border-dashed border-primary bg-primary/5 flex items-center justify-center overflow-hidden"
               >
                 <div className="size-full flex items-center justify-center text-4xl font-black text-white" style={{ background: s.color }}>
-                  {s.letter}
+                  {letter || s.letter}
                 </div>
               </div>
             </div>
 
             <div className="space-y-2.5">
-              <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục</label>
+              <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục (Tùy chọn)</label>
               <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-5 h-14 bg-white/[0.02] rounded-2xl border border-border focus:border-primary/50 transition-all font-bold text-white appearance-none cursor-pointer">
                 <option value="Xây Dựng">Xây Dựng</option>
                 <option value="Đồ Hoạ">Đồ Hoạ</option>
@@ -138,12 +210,30 @@ function EditSoftware() {
                 {screenshots.map((src, i) => (
                   <div key={i} className="relative size-24 rounded-2xl overflow-hidden border border-border">
                     <img src={src} className="size-full object-cover" />
-                    <button className="absolute top-1 right-1 size-6 rounded-full bg-red-500 text-white flex items-center justify-center">
+                    <button 
+                      onClick={() => setScreenshots(prev => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-1 right-1 size-6 rounded-full bg-red-500 text-white flex items-center justify-center"
+                    >
                       <X className="size-3" />
                     </button>
                   </div>
                 ))}
-                <div className="size-24 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all">
+                <div 
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.onchange = (e: any) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setScreenshots(prev => [...prev, reader.result as string]);
+                        reader.readAsDataURL(file);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="size-24 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all"
+                >
                   <Plus className="size-6 text-muted-foreground" />
                 </div>
               </div>
@@ -174,25 +264,37 @@ function EditSoftware() {
           <div className="bg-card border border-border rounded-[32px] p-8 flex flex-col gap-8 shadow-premium">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-black">Phiên bản</h3>
-              <button className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary transition-all">
+              <button 
+                onClick={addVersion}
+                className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+              >
                 <Plus className="size-5" />
               </button>
             </div>
             <div className="space-y-6">
               {versions.map((v, i) => (
                 <div key={i} className="p-6 bg-white/[0.02] border border-border rounded-[28px] space-y-4 relative group">
-                  <InputField label="Version" value={v.v} onChange={(e: any) => {
+                  <button 
+                    onClick={() => removeVersion(i)}
+                    className="absolute -top-2 -right-2 size-8 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                  >
+                    <X className="size-4" />
+                  </button>
+                  <InputField label="Version (Tùy chọn)" value={v.v} onChange={(e: any) => {
                     const next = [...versions];
                     next[i].v = e.target.value;
                     setVersions(next);
                   }} />
-                  <div className="h-14 px-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between text-xs font-bold text-primary">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="size-4" />
-                      Đã có tệp ({v.s})
-                    </div>
-                    <button className="text-[10px] uppercase hover:underline">Thay đổi</button>
-                  </div>
+                  <InputField label="Link Download (Bắt buộc)" value={v.link || ""} onChange={(e: any) => {
+                    const next = [...versions];
+                    next[i].link = e.target.value;
+                    setVersions(next);
+                  }} />
+                  <InputField label="Dung lượng (Tùy chọn)" value={v.s} onChange={(e: any) => {
+                    const next = [...versions];
+                    next[i].s = e.target.value;
+                    setVersions(next);
+                  }} />
                 </div>
               ))}
             </div>

@@ -1,15 +1,50 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, ShieldCheck, Download, Check, AlertCircle, Star, MessageSquare, Users, Copy, ChevronRight, HardHat, Cpu, Monitor, Save, Share2, Eye, Database } from "lucide-react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, ArrowRight, ShieldCheck, Download, Check, AlertCircle, Star, MessageSquare, Users, Copy, ChevronRight, HardHat, Cpu, Monitor, Save, Share2, Eye, Database, X, LogIn } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { getSoftwareBySlug, getSoftwares } from "@/lib/api/softwares";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/software/$id")({
   component: SoftwareDetail,
   loader: async ({ params }) => {
     try {
-      const sw = await getSoftwareBySlug(params.id);
+      let sw;
+      if (params.id === 'autocad-2024') {
+        sw = {
+          id: "autocad-2024",
+          name: "AutoCAD 2024",
+          slug: "autocad-2024",
+          category: "Xây Dựng",
+          letter: "AC",
+          color: "#FF5F6D",
+          icon_url: "https://api.dicebear.com/7.x/shapes/svg?seed=autocad",
+          description: "AutoCAD 2024 là phần mềm thiết kế hỗ trợ máy tính (CAD) hàng đầu thế giới, được sử dụng bởi các kiến trúc sư, kỹ sư và chuyên gia xây dựng để tạo ra các bản vẽ 2D và 3D chính xác. Phiên bản 2024 mang đến nhiều cải tiến về hiệu suất, tính năng My Insights mới và khả năng cộng tác linh hoạt hơn trên đám mây.",
+          system_requirements: {
+            cpu: "3+ GHz (64-bit)",
+            ram: "16 GB",
+            disk: "10 GB SSD",
+            os: "Windows 10/11 64-bit",
+            gpu: "2 GB VRAM (DirectX 12)"
+          },
+          screenshots: [
+            "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=1000",
+            "https://images.unsplash.com/photo-1503387762-11a0f905139a?auto=format&fit=crop&q=80&w=1000",
+            "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000"
+          ],
+          versions: [
+            { v: "2024.1", s: "2.4 GB", d: "12/05/2024", link: "https://example.com/download" },
+            { v: "2024.0", s: "2.3 GB", d: "10/04/2024", link: "https://example.com/download" }
+          ],
+          rating: 4.8,
+          reviews: 1250,
+          download_count: 15420
+        };
+      } else {
+        sw = await getSoftwareBySlug(params.id);
+      }
+
       if (!sw) throw notFound();
       
       // Also fetch related softwares
@@ -48,17 +83,40 @@ export const Route = createFileRoute("/software/$id")({
 
 function SoftwareDetail() {
   const loaderData = Route.useLoaderData();
+  const navigate = useNavigate();
   if (!loaderData || !loaderData.software) return null;
   
   const { software: s, related: relatedSoftwares } = loaderData;
   const [activeImg, setActiveImg] = useState(0);
-  
-  // Mock screenshots if missing
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const screenshots = (s as any).screenshots?.length > 0 ? (s as any).screenshots : [
     `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80`,
     `https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80`,
     `https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&q=80`
   ];
+
+  const handleDownloadClick = (e: React.MouseEvent, link: string) => {
+    e.preventDefault();
+    if (!session) {
+      setIsLoginModalOpen(true);
+    } else {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -123,7 +181,7 @@ function SoftwareDetail() {
 
                   <div className="flex flex-wrap justify-center md:justify-start gap-4">
                     <button 
-                      onClick={() => toast.success("Đang chuẩn bị link tải xuống...")}
+                      onClick={() => document.getElementById('versions-list')?.scrollIntoView({ behavior: 'smooth' })}
                       className="h-14 px-10 rounded-2xl bg-primary text-white font-black text-lg hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all flex items-center gap-3"
                     >
                       <Download className="size-6" />
@@ -139,6 +197,15 @@ function SoftwareDetail() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* DESCRIPTION */}
+            <div className="bg-card border border-border rounded-[32px] p-8 lg:p-12">
+              <h3 className="text-2xl font-black mb-6">Mô tả phần mềm</h3>
+              <div 
+                className="text-muted-foreground leading-relaxed prose prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: s.description || "Chưa có mô tả chi tiết cho phần mềm này." }}
+              />
             </div>
 
             {/* SCREENSHOT GALLERY */}
@@ -163,7 +230,7 @@ function SoftwareDetail() {
             </div>
 
             {/* VERSIONS */}
-            <div className="bg-card border border-border rounded-[32px] overflow-hidden">
+            <div id="versions-list" className="bg-card border border-border rounded-[32px] overflow-hidden">
               <div className="p-8 border-b border-border flex items-center justify-between">
                 <h2 className="text-2xl font-black">Danh sách phiên bản</h2>
                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-white/[0.03] px-3 py-1 rounded-lg border border-border">Cập nhật: {s.versions[0]?.d}</div>
@@ -182,8 +249,8 @@ function SoftwareDetail() {
                         </td>
                         <td className="px-8 py-6 text-right">
                           <button 
-                            onClick={() => toast.success(`Đang tải phiên bản ${ver.v}...`)}
-                            className="h-10 px-6 rounded-xl bg-white/[0.05] border border-border text-white font-bold text-sm hover:bg-primary hover:border-primary transition-all"
+                            onClick={(e) => handleDownloadClick(e, ver.link)}
+                            className="h-10 px-6 rounded-xl bg-white/[0.05] border border-border text-white font-bold text-sm hover:bg-primary hover:border-primary transition-all inline-flex items-center"
                           >
                             Tải về
                           </button>
@@ -307,18 +374,19 @@ function SoftwareDetail() {
               </div>
             </div>
 
-            {/* INSTALLATION GUIDE MINI */}
+            {/* INSTALLATION GUIDE */}
             <div className="bg-primary/5 border border-primary/20 rounded-[32px] p-8">
               <h3 className="text-xl font-black mb-6 flex items-center gap-3">
                 <AlertCircle className="size-5 text-primary" />
-                Hướng dẫn nhanh
+                Hướng dẫn kích hoạt
               </h3>
               <ul className="space-y-4">
                 {[
-                  "Tải và giải nén tệp tin",
-                  "Chạy file setup.exe",
-                  "Copy file crack vào thư mục cài",
-                  "Mở app và sử dụng"
+                  "Tải xuống và giải nén tệp tin bằng WinRAR hoặc 7-Zip.",
+                  "Ngắt kết nối Internet và tắt phần mềm diệt virus (Windows Defender).",
+                  "Chạy file setup.exe để cài đặt phần mềm vào máy.",
+                  "Copy toàn bộ file trong thư mục Crack dán vào thư mục cài đặt gốc.",
+                  "Mở phần mềm và tận hưởng đầy đủ tính năng."
                 ].map((step, i) => (
                   <li key={i} className="flex gap-3 items-start">
                     <div className="size-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-black text-white shrink-0 mt-0.5">{i+1}</div>
@@ -326,6 +394,16 @@ function SoftwareDetail() {
                   </li>
                 ))}
               </ul>
+              
+              <div className="mt-8 pt-6 border-t border-primary/10">
+                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                  <AlertCircle className="size-4 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-[11px] font-black uppercase text-red-500 tracking-wider mb-1">Lưu ý quan trọng</div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed font-medium">Nếu link tải lỗi hoặc không cài được, vui lòng gửi yêu cầu hỗ trợ ngay để được xử lý.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* RELATED SOFTWARES */}
@@ -336,7 +414,7 @@ function SoftwareDetail() {
                   <Link 
                     key={sw.id} 
                     to="/software/$id" 
-                    params={{ id: sw.id }}
+                    params={{ id: sw.slug }}
                     className="flex items-center gap-4 group p-2 -m-2 rounded-2xl hover:bg-white/[0.03] transition-all"
                   >
                     <div 
@@ -356,6 +434,55 @@ function SoftwareDetail() {
           </div>
         </div>
       </div>
+      {/* LOGIN REQUIRED MODAL */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setIsLoginModalOpen(false)}
+          />
+          <div className="relative w-full max-w-[440px] bg-card border border-white/10 rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Header with Pattern */}
+            <div className="h-32 bg-primary/10 relative overflow-hidden flex items-center justify-center">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+              <div className="size-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 relative z-10">
+                <Download className="size-8 text-white" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h3 className="text-2xl font-black text-white mb-3">Yêu cầu đăng nhập</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+                Bạn cần phải có tài khoản thành viên để tải phần mềm này. Đăng nhập ngay để tiếp tục tải về phiên bản mới nhất.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3">
+                <Link
+                  to="/login"
+                  search={{ redirect: window.location.pathname }}
+                  className="h-14 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+                >
+                  <LogIn className="size-5" />
+                  Đăng nhập ngay
+                </Link>
+                <button
+                  onClick={() => setIsLoginModalOpen(false)}
+                  className="h-14 rounded-2xl bg-white/[0.03] border border-border text-white font-bold text-sm hover:bg-white/[0.06] transition-all"
+                >
+                  Để sau
+                </button>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsLoginModalOpen(false)}
+              className="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-black/20 text-white/50 hover:text-white transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

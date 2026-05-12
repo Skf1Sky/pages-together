@@ -72,17 +72,17 @@ function AdminLayout() {
       user={user as any}
       activeTab={activeTab}
       sidebarItems={adminSidebarItems}
-    >
-      <div className="absolute top-8 right-8 z-50">
+      sidebarFooter={
         <button 
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="h-11 px-5 rounded-xl bg-white/[0.03] border border-border text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all flex items-center gap-2 font-bold text-xs disabled:opacity-50"
+          className="w-full h-12 px-5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest disabled:opacity-50"
         >
           <LogOut className="size-4" />
-          {isLoggingOut ? "Đang xử lý..." : "Đăng xuất"}
+          {isLoggingOut ? "Đang thoát..." : "Đăng xuất hệ thống"}
         </button>
-      </div>
+      }
+    >
       <Outlet />
     </AppLayout>
   );
