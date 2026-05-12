@@ -230,7 +230,7 @@ function AdminSoftwares() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="size-12 rounded-2xl flex items-center justify-center text-white font-black text-xl shrink-0 shadow-lg" style={{ background: s.color }}>
-                          {s.letter}
+                          {s.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-bold text-[15px] group-hover:text-primary transition-colors">{s.name}</div>

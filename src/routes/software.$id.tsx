@@ -139,7 +139,7 @@ function SoftwareDetail() {
                   className="size-32 lg:size-40 rounded-[2.5rem] flex items-center justify-center text-5xl font-black text-white shadow-2xl shrink-0 mx-auto md:mx-0"
                   style={{ background: `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` }}
                 >
-                  {s.letter}
+                  {s.name.charAt(0).toUpperCase()}
                 </div>
                 
                 <div className="flex-1 text-center md:text-left">

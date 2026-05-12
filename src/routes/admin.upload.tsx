@@ -50,7 +50,6 @@ function InputField({ label, placeholder, type = "text", value, onChange, error 
 function UploadSoftware() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [letter, setLetter] = useState("");
   const [category, setCategory] = useState("Xây Dựng");
   const [iconUrl, setIconUrl] = useState("");
   const [screenshots, setScreenshots] = useState<string[]>([]);
@@ -105,7 +104,6 @@ function UploadSoftware() {
       
       const savePromise = async () => {
         // 1. Prepare software data
-        const finalLetter = letter || name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || "SW";
         const finalIcon = iconUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${name}`;
         const slug = name.toLowerCase()
           .trim()
@@ -116,7 +114,7 @@ function UploadSoftware() {
         const software = await createSoftware({
           name,
           slug,
-          letter: finalLetter,
+          letter: name.charAt(0).toUpperCase(),
           icon_url: finalIcon,
           category,
           description,
@@ -201,13 +199,6 @@ function UploadSoftware() {
                 value={name} 
                 onChange={(e: any) => setName(e.target.value)}
                 error={errors.name}
-              />
-              <InputField 
-                label="Ký tự đại diện (Tự động tạo nếu để trống)" 
-                placeholder="VD: AC" 
-                value={letter} 
-                onChange={(e: any) => setLetter(e.target.value.toUpperCase().slice(0, 2))}
-                error={errors.letter}
               />
             </div>
             

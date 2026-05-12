@@ -53,7 +53,6 @@ function EditSoftware() {
   if (!s) return null;
   
   const [name, setName] = useState(s.name || "");
-  const [letter, setLetter] = useState(s.letter || "");
   const [category, setCategory] = useState(s.category || "Xây Dựng");
   const [iconUrl, setIconUrl] = useState(s.icon_url || ""); 
   const [screenshots, setScreenshots] = useState<string[]>(s.screenshots || []);
@@ -87,7 +86,7 @@ function EditSoftware() {
       // 1. Update main software info
       await updateSoftware(s.id, {
         name,
-        letter,
+        letter: name.charAt(0).toUpperCase(),
         category,
         description,
         is_active: true
@@ -170,13 +169,8 @@ function EditSoftware() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 flex flex-col">
           <FormSection title="Thông tin cơ bản" icon={Info}>
-            <div className="md:col-span-2 flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
-                <InputField label="Tên phần mềm (Bắt buộc)" value={name} onChange={(e: any) => setName(e.target.value)} />
-              </div>
-              <div className="w-full md:w-48">
-                <InputField label="Letter (Tùy chọn)" value={letter} onChange={(e: any) => setLetter(e.target.value.toUpperCase().slice(0, 2))} />
-              </div>
+            <div className="md:col-span-2">
+              <InputField label="Tên phần mềm (Bắt buộc)" value={name} onChange={(e: any) => setName(e.target.value)} />
             </div>
             
             <div className="space-y-2.5">
@@ -184,8 +178,8 @@ function EditSoftware() {
               <div 
                 className="aspect-square size-32 rounded-[32px] border-2 border-dashed border-primary bg-primary/5 flex items-center justify-center overflow-hidden"
               >
-                <div className="size-full flex items-center justify-center text-4xl font-black text-white" style={{ background: s.color }}>
-                  {letter || s.letter}
+                <div className="size-full flex items-center justify-center text-4xl font-black text-white" style={{ background: s.color || 'var(--primary)' }}>
+                  {name.charAt(0).toUpperCase()}
                 </div>
               </div>
             </div>

@@ -281,7 +281,7 @@ function Index() {
                     className="size-[72px] rounded-[20px] mb-4 flex items-center justify-center text-2xl font-black text-white"
                     style={{ background: s?.color ? `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` : 'var(--primary)' }}
                   >
-                    {s?.letter || '?'}
+                    {s?.name?.charAt(0).toUpperCase() || '?'}
                   </div>
                   <div className="font-bold mb-1 truncate">{s?.name || 'Chưa đặt tên'}</div>
                   <div className="text-muted-foreground text-[13px] mb-4">{s?.category || 'Chưa phân loại'}</div>

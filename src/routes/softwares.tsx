@@ -112,7 +112,7 @@ function SoftwaresList() {
                   className={`rounded-[24px] flex items-center justify-center text-3xl font-black text-white shadow-lg shrink-0 ${viewMode === 'list' ? 'size-[80px]' : 'size-[100px] mx-auto mb-6'}`}
                   style={{ background: s?.color ? `linear-gradient(135deg, ${s.color}, oklch(from ${s.color} l c h / 0.7))` : 'var(--primary)' }}
                 >
-                  {s?.letter || '?'}
+                  {s?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
                 
                 <div className={`flex-1 ${viewMode === 'list' ? '' : 'text-center'}`}>
