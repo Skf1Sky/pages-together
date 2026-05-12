@@ -118,8 +118,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { getMaintenanceMode } from "@/lib/api/settings";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -128,17 +129,21 @@ function RootComponent() {
 
   useEffect(() => {
     // Maintenance Check
-    if (typeof window !== 'undefined') {
-      const isMaintenance = localStorage.getItem('is_maintenance_mode') === 'true';
-      const isMaintenancePage = window.location.pathname === '/maintenance';
-      const isAdminPath = window.location.pathname.startsWith('/admin') || window.location.pathname === '/login';
+    const checkMaintenance = async () => {
+      if (typeof window !== 'undefined') {
+        const isMaintenance = await getMaintenanceMode();
+        const isMaintenancePage = window.location.pathname === '/maintenance';
+        const isAdminPath = window.location.pathname.startsWith('/admin') || window.location.pathname === '/login';
 
-      if (isMaintenance && !isAdmin && !isMaintenancePage && !isAdminPath) {
-        window.location.href = '/maintenance';
-      } else if (!isMaintenance && isMaintenancePage) {
-        window.location.href = '/';
+        if (isMaintenance && !isAdmin && !isMaintenancePage && !isAdminPath) {
+          window.location.href = '/maintenance';
+        } else if (!isMaintenance && isMaintenancePage) {
+          window.location.href = '/';
+        }
       }
-    }
+    };
+
+    checkMaintenance();
   }, [isAdmin, loading]);
 
   return (

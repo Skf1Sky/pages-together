@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Save, Globe, Image as ImageIcon, Mail, Phone, MapPin, Shield, Bell, Database } from "lucide-react";
 import { toast } from "sonner";
+import { getMaintenanceMode, setMaintenanceMode } from "@/lib/api/settings";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
@@ -12,21 +14,29 @@ function AdminSettings() {
   const [email, setEmail] = useState("support@xapps.com");
   const [phone, setPhone] = useState("0123 456 789");
   const [address, setAddress] = useState("123 Đường ABC, Quận X, TP. HCM");
-  const [isMaintenance, setIsMaintenance] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('is_maintenance_mode') === 'true';
-    }
-    return false;
-  });
+  const [isMaintenance, setIsMaintenance] = useState(false);
 
-  const toggleMaintenance = () => {
+  useEffect(() => {
+    getMaintenanceMode().then(setIsMaintenance);
+  }, []);
+
+  const toggleMaintenance = async () => {
     const newState = !isMaintenance;
+    const oldState = isMaintenance;
+    
+    // Optimistic update
     setIsMaintenance(newState);
-    localStorage.setItem('is_maintenance_mode', String(newState));
-    if (newState) {
-      toast.warning("Hệ thống đã chuyển sang chế độ bảo trì!");
-    } else {
-      toast.success("Hệ thống đã hoạt động trở lại bình thường.");
+    
+    try {
+      await setMaintenanceMode(newState);
+      if (newState) {
+        toast.warning("Hệ thống đã chuyển sang chế độ bảo trì toàn cầu!");
+      } else {
+        toast.success("Hệ thống đã hoạt động trở lại bình thường.");
+      }
+    } catch (error) {
+      setIsMaintenance(oldState);
+      toast.error("Không thể cập nhật trạng thái bảo trì. Vui lòng kiểm tra lại Database!");
     }
   };
 
