@@ -12,8 +12,8 @@ export async function getSoftwares(category?: string, search?: string) {
       .select('*, versions(*)')
       .eq('is_active', true)
 
-    if (category && category !== 'all' && category !== 'Tất cả danh mục') {
-      query = query.eq('category', category)
+    if (category && category.toLowerCase() !== 'all' && category !== 'Tất cả danh mục') {
+      query = query.ilike('category', category.trim())
     }
     
     if (search) query = query.ilike('name', `%${search}%`)

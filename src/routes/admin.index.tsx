@@ -16,11 +16,11 @@ import {
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
-import { getSoftwares } from "@/lib/api/softwares";
+import { getDashboardStats } from "@/lib/api/dashboard";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export const Route = createFileRoute("/admin/")({
-  loader: () => getSoftwares(),
+  loader: () => getDashboardStats(),
   component: AdminDashboard,
 });
 
@@ -35,32 +35,21 @@ const chartData = [
 ];
 
 function AdminDashboard() {
-  const softwares = Route.useLoaderData() || [];
+  const data = Route.useLoaderData();
   
-  const topAppsData = React.useMemo(() => (
-    Array.isArray(softwares) ? softwares
-      .map((s: any) => ({ name: s.name, value: parseInt(s.downloads?.replace(/[^0-9]/g, '') || "0") }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5) : []
-  ), [softwares]);
-
-  const totalDownloads = React.useMemo(() => (
-    Array.isArray(softwares) ? softwares.reduce((acc, curr: any) => acc + parseInt(curr.downloads?.replace(/[^0-9]/g, '') || "0"), 0) : 0
-  ), [softwares]);
-
   const stats = [
-    { label: "Tổng người dùng", value: "1,284", icon: Users, change: "+12%", color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Số lượng Apps", value: softwares?.length?.toString() || "0", icon: Package, change: "+3", color: "text-primary", bg: "bg-primary/10" },
-    { label: "Lượt tải về", value: `${(totalDownloads / 1000).toFixed(1)}K`, icon: Download, change: "+18%", color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Tổng người dùng", value: data.totalUsers.toLocaleString(), icon: Users, change: "+12%", color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Số lượng Apps", value: data.totalApps.toString(), icon: Package, change: "+3", color: "text-primary", bg: "bg-primary/10" },
+    { label: "Lượt tải về", value: data.totalDownloads >= 1000 ? `${(data.totalDownloads / 1000).toFixed(1)}K` : data.totalDownloads.toString(), icon: Download, change: "+18%", color: "text-green-500", bg: "bg-green-500/10" },
     { label: "Lượt tải hôm nay", value: "842", icon: Activity, change: "+5.4%", color: "text-orange-500", bg: "bg-orange-500/10" },
   ];
 
-  const activityLog = [
-    { type: 'upload', user: 'Admin', target: 'AutoCAD 2024', time: '10 phút trước', icon: Package, color: 'text-blue-500' },
-    { type: 'delete', user: 'Admin', target: 'Old Version 1.2', time: '1 giờ trước', icon: AlertTriangle, color: 'text-red-500' },
-    { type: 'update', user: 'Admin', target: 'System Settings', time: '3 giờ trước', icon: CheckCircle2, color: 'text-green-500' },
-    { type: 'login', user: 'Admin', target: 'New Session', time: '5 giờ trước', icon: Users, color: 'text-primary' },
-  ];
+  const activityIconMap: Record<string, any> = {
+    package: Package,
+    users: Users,
+    alert: AlertTriangle,
+    check: CheckCircle2,
+  };
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -172,22 +161,25 @@ function AdminDashboard() {
               <Link to="/admin" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors">Xem tất cả</Link>
             </div>
             <div className="space-y-6">
-              {activityLog.map((log, i) => (
-                <div key={i} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className={`size-10 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center ${log.color}`}>
-                      <log.icon className="size-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                        {log.user} <span className="text-muted-foreground font-medium">đã {log.type === 'upload' ? 'đăng' : log.type === 'delete' ? 'xóa' : log.type === 'update' ? 'cập nhật' : 'đăng nhập'}</span> {log.target}
+              {data.recentActivity.map((log: any, i: number) => {
+                const Icon = activityIconMap[log.icon] || Package;
+                return (
+                  <div key={i} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      <div className={`size-10 rounded-xl bg-white/[0.03] border border-border flex items-center justify-center ${log.color}`}>
+                        <Icon className="size-5" />
                       </div>
-                      <div className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">{log.time}</div>
+                      <div>
+                        <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                          {log.user} <span className="text-muted-foreground font-medium">đã {log.type === 'upload' ? 'đăng' : log.type === 'delete' ? 'xóa' : log.type === 'update' ? 'cập nhật' : 'đăng nhập'}</span> {log.target}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">{log.time}</div>
+                      </div>
                     </div>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-white transition-colors" />
                   </div>
-                  <ChevronRight className="size-4 text-muted-foreground group-hover:text-white transition-colors" />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -200,7 +192,7 @@ function AdminDashboard() {
             <h3 className="text-xl font-bold">Top phần mềm tải nhiều</h3>
             <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topAppsData} layout="vertical">
+                <BarChart data={data.topApps} layout="vertical">
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 

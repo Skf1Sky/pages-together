@@ -13,9 +13,9 @@ type SoftwaresSearch = {
 export const Route = createFileRoute("/softwares")({
   validateSearch: (search: Record<string, unknown>): SoftwaresSearch => {
     return {
-      category: (search?.category as string) || undefined,
-      q: (search?.q as string) || undefined,
-      page: Number(search?.page) || 1,
+      category: search.category ? String(search.category) : undefined,
+      q: search.q ? String(search.q) : undefined,
+      page: Number(search.page) || 1,
     };
   },
   loader: ({ search }) => getSoftwares(search?.category, search?.q),
@@ -33,14 +33,18 @@ function SoftwaresList() {
   const softwares = (Route.useLoaderData() as any[]) || [];
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const itemsPerPage = 8;
+  const filteredBySearchAndCategory = useMemo(() => {
+    if (!category || category.toLowerCase() === 'all' || category === 'Tất cả danh mục') return softwares;
+    return softwares.filter((s: any) => s.category?.trim().toLowerCase() === category.trim().toLowerCase());
+  }, [softwares, category]);
 
-  const totalPages = Math.ceil((softwares?.length || 0) / itemsPerPage);
+  const totalPages = Math.ceil((filteredBySearchAndCategory?.length || 0) / itemsPerPage);
   const currentPage = Math.min(Math.max(1, page), totalPages || 1);
   
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return Array.isArray(softwares) ? softwares.slice(start, start + itemsPerPage) : [];
-  }, [softwares, currentPage]);
+    return Array.isArray(filteredBySearchAndCategory) ? filteredBySearchAndCategory.slice(start, start + itemsPerPage) : [];
+  }, [filteredBySearchAndCategory, currentPage]);
 
   return (
     <AppLayout activeTab={category || "Tất cả phần mềm"}>
@@ -52,7 +56,7 @@ function SoftwaresList() {
               {category ? `Danh mục: ${category}` : "Tất cả phần mềm"}
             </h1>
             <p className="text-muted-foreground font-medium">
-              Tìm thấy <span className="text-white">{softwares.length}</span> sản phẩm phù hợp
+              Tìm thấy <span className="text-white">{filteredBySearchAndCategory.length}</span> sản phẩm phù hợp
             </p>
           </div>
 
