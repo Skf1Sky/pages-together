@@ -8,6 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
+    // In TanStack Start, beforeLoad runs on server too.
+    // Server doesn't have access to localStorage, so getSession() is null.
+    // We skip redirect on server to prevent F5 from logging out users.
+    if (typeof window === 'undefined') return;
+
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -35,10 +40,16 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user && typeof window !== 'undefined') {
+      navigate({ to: "/login", search: { redirect: window.location.href } });
+    }
+  }, [user, loading, navigate]);
 
   const adminSidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/admin" },

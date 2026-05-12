@@ -12,7 +12,14 @@ if (!supabaseUrl || !supabaseKey) {
 // Client for general use
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-key'
+  supabaseKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 )
 
 // Admin client (server-side only)
