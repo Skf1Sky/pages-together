@@ -186,7 +186,7 @@ function EditSoftware() {
 
             <div className="space-y-2.5">
               <label className="text-sm font-bold text-muted-foreground ml-1">Danh mục (Tùy chọn)</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-5 h-14 bg-white/[0.02] rounded-2xl border border-border focus:border-primary/50 transition-all font-bold text-white appearance-none cursor-pointer">
+              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-5 h-14 bg-secondary rounded-2xl border border-border focus:border-primary/50 transition-all font-bold text-white appearance-none cursor-pointer">
                 <option value="Xây Dựng">Xây Dựng</option>
                 <option value="Đồ Hoạ">Đồ Hoạ</option>
                 <option value="Văn Phòng">Văn Phòng</option>

@@ -118,8 +118,28 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { isAdmin, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Maintenance Check
+    if (typeof window !== 'undefined') {
+      const isMaintenance = localStorage.getItem('is_maintenance_mode') === 'true';
+      const isMaintenancePage = window.location.pathname === '/maintenance';
+      const isAdminPath = window.location.pathname.startsWith('/admin') || window.location.pathname === '/login';
+
+      if (isMaintenance && !isAdmin && !isMaintenancePage && !isAdminPath) {
+        window.location.href = '/maintenance';
+      } else if (!isMaintenance && isMaintenancePage) {
+        window.location.href = '/';
+      }
+    }
+  }, [isAdmin, loading]);
 
   return (
     <QueryClientProvider client={queryClient}>

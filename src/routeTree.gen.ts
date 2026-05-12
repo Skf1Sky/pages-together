@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SoftwaresRouteImport } from './routes/softwares'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -35,6 +36,11 @@ const SupportRoute = SupportRouteImport.update({
 const SoftwaresRoute = SoftwaresRouteImport.update({
   id: '/softwares',
   path: '/softwares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/softwares': typeof SoftwaresRoute
   '/support': typeof SupportRoute
   '/admin/login': typeof AdminLoginRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/login'
+    | '/maintenance'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/login'
+    | '/maintenance'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/login'
+    | '/maintenance'
     | '/softwares'
     | '/support'
     | '/admin/login'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
+  MaintenanceRoute: typeof MaintenanceRoute
   SoftwaresRoute: typeof SoftwaresRoute
   SupportRoute: typeof SupportRoute
   SoftwareIdRoute: typeof SoftwareIdRoute
@@ -256,6 +269,13 @@ declare module '@tanstack/react-router' {
       path: '/softwares'
       fullPath: '/softwares'
       preLoaderRoute: typeof SoftwaresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -398,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
+  MaintenanceRoute: MaintenanceRoute,
   SoftwaresRoute: SoftwaresRoute,
   SupportRoute: SupportRoute,
   SoftwareIdRoute: SoftwareIdRoute,

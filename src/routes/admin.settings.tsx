@@ -6,13 +6,29 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
 });
-
 function AdminSettings() {
   const [siteName, setSiteName] = useState("X Apps");
   const [siteDescription, setSiteDescription] = useState("Hệ thống download phần mềm hàng đầu");
   const [email, setEmail] = useState("support@xapps.com");
   const [phone, setPhone] = useState("0123 456 789");
   const [address, setAddress] = useState("123 Đường ABC, Quận X, TP. HCM");
+  const [isMaintenance, setIsMaintenance] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('is_maintenance_mode') === 'true';
+    }
+    return false;
+  });
+
+  const toggleMaintenance = () => {
+    const newState = !isMaintenance;
+    setIsMaintenance(newState);
+    localStorage.setItem('is_maintenance_mode', String(newState));
+    if (newState) {
+      toast.warning("Hệ thống đã chuyển sang chế độ bảo trì!");
+    } else {
+      toast.success("Hệ thống đã hoạt động trở lại bình thường.");
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,13 +131,21 @@ function AdminSettings() {
             </h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-border">
+              <button 
+                type="button"
+                onClick={toggleMaintenance}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-border hover:bg-white/[0.05] transition-all text-left"
+              >
                 <div className="flex flex-col">
                   <span className="text-sm font-bold">Chế độ bảo trì</span>
-                  <span className="text-[10px] text-muted-foreground font-medium uppercase">Off</span>
+                  <span className={`text-[10px] font-black uppercase ${isMaintenance ? "text-yellow-500" : "text-muted-foreground"}`}>
+                    {isMaintenance ? "Đang bật" : "Đang tắt"}
+                  </span>
                 </div>
-                <div className="size-10 rounded-full bg-white/[0.05] border border-border" />
-              </div>
+                <div className={`w-14 h-8 rounded-full border border-border p-1 transition-all ${isMaintenance ? "bg-primary/20 border-primary" : "bg-white/[0.05]"}`}>
+                  <div className={`size-5.5 rounded-full transition-all ${isMaintenance ? "bg-primary translate-x-6" : "bg-muted-foreground"}`} />
+                </div>
+              </button>
 
               <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-border">
                 <div className="flex flex-col">

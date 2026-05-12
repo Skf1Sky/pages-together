@@ -68,6 +68,12 @@
   --border: #252525;
   --input: #111111;
   --ring: #c5a47e;
+  color-scheme: dark;
+}
+
+.dark select option {
+  background-color: #151515;
+  color: #E2E2E2;
 }
 
 @layer base {
