@@ -24,7 +24,7 @@ type Ticket = {
 
 const INITIAL_TICKETS: Ticket[] = [
   { id: "1024", user: "xhome", email: "xhome@gmail.com", subject: "Lỗi link tải AutoCAD 2024", category: "Lỗi link", status: "pending", time: "5 phút trước", message: "Chào admin, link tải bản 2024.1 bị lỗi 404 rồi ạ." },
-  { id: "1025", user: "nva", email: "nva@example.com", subject: "Hỗ trợ cài Photoshop", category: "Cài đặt", status: "processing", time: "1 giờ trước", message: "Mình cài xong dán crack rồi mà mở không lên.", assignedTo: "Admin Vinh" },
+  { id: "1025", user: "nva", email: "nva@example.com", subject: "Hỗ trợ cài Photoshop", category: "Cài đặt", status: "processing", time: "1 giờ trước", message: "Mình cài xong rồi mà mở không lên.", assignedTo: "Admin Vinh" },
   { id: "1026", user: "test_user", email: "test@xapps.com", subject: "Yêu cầu phần mềm Revit", category: "Yêu cầu", status: "resolved", time: "Hôm qua", message: "Admin cho mình xin bản Revit 2024 nhé.", assignedTo: "Admin Vinh" },
 ];
 

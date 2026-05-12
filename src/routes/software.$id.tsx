@@ -287,7 +287,7 @@ function SoftwareDetail() {
 
               <div className="space-y-6">
                 {[
-                  { user: "Thành Đạt", date: "02/05/2024", comment: "Bản này cài đặt rất ổn định, không bị lỗi crack. Cảm ơn admin!", rating: 5 },
+                  { user: "Thành Đạt", date: "02/05/2024", comment: "Bản này cài đặt rất ổn định, không bị lỗi. Cảm ơn admin!", rating: 5 },
                   { user: "Minh Quân", date: "28/04/2024", comment: "Tốc độ tải nhanh thật sự, 3GB mà tải mất có 5 phút.", rating: 5 },
                 ].map((rev, i) => (
                   <div key={i} className="p-6 bg-white/[0.02] border border-border rounded-[24px]">
@@ -367,7 +367,7 @@ function SoftwareDetail() {
             <div className="bg-primary/5 border border-primary/20 rounded-[32px] p-8">
               <h3 className="text-xl font-black mb-6 flex items-center gap-3">
                 <AlertCircle className="size-5 text-primary" />
-                Hướng dẫn kích hoạt
+                Hướng dẫn cài đặt
               </h3>
               <ul className="space-y-4">
                 {[
