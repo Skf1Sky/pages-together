@@ -5,6 +5,11 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string) || undefined,
+    }
+  },
   component: LoginPage,
 });
 

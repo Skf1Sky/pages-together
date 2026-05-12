@@ -5,6 +5,7 @@ import { getSoftwareBySlug, getSoftwares } from "@/lib/api/softwares";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/software/$id")({
   component: SoftwareDetail,
@@ -87,21 +88,9 @@ function SoftwareDetail() {
   if (!loaderData || !loaderData.software) return null;
   
   const { software: s, related: relatedSoftwares } = loaderData;
+  const { user } = useAuth();
   const [activeImg, setActiveImg] = useState(0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const screenshots = (s as any).screenshots?.length > 0 ? (s as any).screenshots : [
     `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80`,
@@ -111,7 +100,7 @@ function SoftwareDetail() {
 
   const handleDownloadClick = (e: React.MouseEvent, link: string) => {
     e.preventDefault();
-    if (!session) {
+    if (!user) {
       setIsLoginModalOpen(true);
     } else {
       window.open(link, '_blank', 'noopener,noreferrer');
