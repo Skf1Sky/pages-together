@@ -287,8 +287,8 @@ function SoftwareDetail() {
 
               <div className="space-y-6">
                 {[
-                  { user: "Thành Đạt", date: "02/05/2024", comment: "Bản này cài đặt rất ổn định, không bị lỗi. Cảm ơn admin!", rating: 5 },
-                  { user: "Minh Quân", date: "28/04/2024", comment: "Tốc độ tải nhanh thật sự, 3GB mà tải mất có 5 phút.", rating: 5 },
+                  { user: "Thành Đạt", date: "02/05/2024", comment: "Phần mềm chạy rất mượt, mình đã cài theo đúng hướng dẫn và thành công ngay lần đầu. Cảm ơn đội ngũ nhé!", rating: 5 },
+                  { user: "Minh Quân", date: "28/04/2024", comment: "Link tải siêu nhanh, mình dùng IDM tải bộ cài 3GB chỉ mất có vài phút. Cảm ơn admin đã chia sẻ!", rating: 5 },
                 ].map((rev, i) => (
                   <div key={i} className="p-6 bg-white/[0.02] border border-border rounded-[24px]">
                     <div className="flex justify-between items-start mb-4">
