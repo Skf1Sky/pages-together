@@ -372,10 +372,10 @@ function SoftwareDetail() {
               <ul className="space-y-4">
                 {[
                   "Tải xuống và giải nén tệp tin bằng WinRAR hoặc 7-Zip.",
-                  "Ngắt kết nối Internet và tắt phần mềm diệt virus (Windows Defender).",
-                  "Chạy file setup.exe để cài đặt phần mềm vào máy.",
-                  "Copy toàn bộ file trong thư mục Crack dán vào thư mục cài đặt gốc.",
-                  "Mở phần mềm và tận hưởng đầy đủ tính năng."
+                  "Tạm thời ngắt kết nối Internet và các phần mềm bảo mật để tránh nhận diện nhầm file hệ thống.",
+                  "Khởi chạy tệp tin cài đặt (setup.exe) để bắt đầu quá trình cài đặt phần mềm.",
+                  "Sao chép các tệp tin trong thư mục 'Fix' hoặc 'Manual' vào thư mục cài đặt gốc của phần mềm.",
+                  "Khởi động phần mềm và trải nghiệm đầy đủ các tính năng cao cấp."
                 ].map((step, i) => (
                   <li key={i} className="flex gap-3 items-start">
                     <div className="size-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-black text-white shrink-0 mt-0.5">{i+1}</div>
