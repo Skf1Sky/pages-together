@@ -1,5 +1,5 @@
 {
-  "name": "pages-together",
+  "name": "xapps",
   "main": "dist/server/server.js",
   "assets": {
     "directory": "./dist/client",
